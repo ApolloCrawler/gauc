@@ -4,6 +4,8 @@
 
 *Why gauc? "gauc" is czech slang term for couch.*
 
+This project was originaly inspired by [couchbase-rs](https://github.com/daschl/couchbase-rs)
+
 ## Status
 
 [![Build Status](https://travis-ci.org/korczis/gauc.svg?branch=master)](https://travis-ci.org/korczis/gauc)
