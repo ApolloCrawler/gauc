@@ -4,6 +4,10 @@ version = "0.1.0"
 authors = ["Tomas Korcak <korczis@gmail.com>"]
 
 [dependencies]
+cargo-count = "*"
+cargo-graph = "*"
+cargo-multi = "*"
+cargo-outdated = "*"
 clap = "*"
 libc = "0.2.16"
 
