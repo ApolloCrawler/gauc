@@ -26,6 +26,8 @@ matrix:
 
 before_install:
   - ./.travis/install.sh
+
+after_script:
   - cargo graph \
     --optional-line-style dashed \
     --optional-line-color red \
