@@ -1,12 +1,16 @@
 extern crate gauc;
 extern crate libc;
 
-use gauc::*;
+use gauc::client::*;
+use gauc::couchbase::*;
+
 use std::ffi::CString;
 use std::ptr;
 use std::ffi::CStr;
 
 fn main() {
+    /* let client = */ Client::new("couchbase://localhost/default");
+
     let connstr = CString::new("couchbase://localhost/default").unwrap();
 
     let mut cropts = LcbCreateSt::default();
@@ -32,7 +36,7 @@ fn main() {
 
         lcb_install_callback3(instance, LcbCallbackType::LcbCallbackGet ,Some(op_callback));
 
-        let key = "21st_amendment_brewery_cafe";
+        let key = "foo";
         let ckey = CString::new(key).unwrap();
         let mut gcmd = LcbCmdGet::default();
         gcmd.key._type = LcbKvBufType::LcbKvCopy;
@@ -59,7 +63,9 @@ unsafe extern "C" fn op_callback(_instance: LcbT, cbtype: LcbCallbackType, resp:
 
             if  (*gresp).value.is_null() == false {
                 let res = CString::from_raw((*gresp).value as *mut i8);
-                println!(">> Content: {}", res.into_string().unwrap());
+                let length = (*gresp).nvalue as usize;
+
+                println!(">> Content: {}", &res.into_string().unwrap()[..length]);
             }
         },
         _ => panic!("! Unknown Callback...")
