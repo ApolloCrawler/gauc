@@ -13,7 +13,7 @@ Couchbase Rust Adapter / CLI
 
 ## Getting started
 
-### Obtaininig Sources
+### Sources
 
 ```
 git clone https://github.com/korczis/gauc.git
