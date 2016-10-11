@@ -60,7 +60,7 @@ impl Client {
 
     pub fn get(&mut self, key: &str) -> &mut Client {
         println!("Getting document with id \"{}\"", key);
-        let ckey = CString::new(key).unwrap();
+        let ckey = CString::new("foo").unwrap();
         let mut gcmd = LcbCmdGet::default();
         gcmd.key._type = LcbKvBufType::LcbKvCopy;
         gcmd.key.contig.bytes = ckey.as_ptr() as *const libc::c_void;
@@ -78,8 +78,12 @@ impl Client {
         self
     }
 
+    pub fn ops_unfinished_count(&self) -> usize {
+        return self.ops.total;
+    }
+
     pub fn ops_finished(&mut self) -> bool {
-        return self.ops.total == 0;
+        return self.ops_unfinished_count() == 0;
     }
 
     pub fn wait(&mut self) {
@@ -97,6 +101,7 @@ impl Client {
             t += 100;
 
             if t > max_msec {
+                println!("wait_max - still {} operations unfinished", self.ops_unfinished_count());
                 break;
             }
         }
