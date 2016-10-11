@@ -1,5 +1,7 @@
 # gauc
 
+*Why gauc? "gauc" is czech slang term for couch.*
+
 Couchbase Rust Adapter / CLI
 
 ## Status
