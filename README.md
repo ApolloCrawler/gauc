@@ -1,6 +1,6 @@
 # gauc
 
-Rust Bindings for Couchbase
+Couchbase Rust Adapter / CLI
 
 ## Status
 
