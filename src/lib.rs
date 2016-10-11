@@ -1,8 +1,7 @@
 extern crate libc;
 
-mod couchbase;
-
-pub use couchbase::*;
+pub mod client;
+pub mod couchbase;
 
 #[cfg(test)]
 mod tests {
