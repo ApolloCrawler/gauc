@@ -13,6 +13,19 @@
 - [rust](https://www.rust-lang.org/en-US/)
 - [libcouchbase](https://github.com/couchbase/libcouchbase)
 
+## Features
+
+### Wrapped functions
+
+- lcb_create
+- lcb_connect
+- lcb_wait
+- lcb_get_bootstrap_status
+- lcb_destroy
+- lcb_strerror
+- lcb_install_callback3
+- lcb_get3
+
 ## Getting started
 
 ### Sources
