@@ -39,6 +39,16 @@ $ cargo build
     Finished debug [unoptimized + debuginfo] target(s) in 16.33 secs
 ```
 
+### Build Examples
+
+For list of all examples see [examples folder](https://github.com/korczis/gauc/tree/master/examples)
+
+```
+$ cargo build --example hello_world
+   Compiling gauc v0.1.0 (file:///Users/tomaskorcak/dev/microcrawler/gauc)
+    Finished debug [unoptimized + debuginfo] target(s) in 1.7 secs
+```
+
 ## Usage
 
 ### Show help
