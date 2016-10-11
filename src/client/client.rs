@@ -2,14 +2,22 @@ extern crate libc;
 
 use std::ffi::CStr;
 use std::ffi::CString;
+use std::fmt;
 use std::{ptr};
 
 use super::super::couchbase::*;
 
+#[derive(Debug)]
+pub struct ClientOps {
+    pub total: usize
+}
+
+#[derive(Debug)]
 pub struct Client {
     pub opts: LcbCreateSt,
     pub instance: LcbT,
-    pub uri: String
+    pub uri: String,
+    pub ops: ClientOps
 }
 
 impl Client {
@@ -38,20 +46,26 @@ impl Client {
 
             lcb_install_callback3(instance, LcbCallbackType::LcbCallbackGet, Some(op_callback));
 
+            let ops = ClientOps {
+                total: 0
+            };
+
             Client {
                 opts: opts,
                 instance: instance,
-                uri: uri.to_string()
+                uri: uri.to_string(),
+                ops: ops
             }
         }
     }
 
-    pub fn get(self: &Client) {
-        let key = "foo";
+    pub fn get(&mut self, key: &str) -> &mut Client {
         let ckey = CString::new(key).unwrap();
         let mut gcmd = LcbCmdGet::default();
         gcmd.key._type = LcbKvBufType::LcbKvCopy;
         gcmd.key.contig.bytes = ckey.as_ptr() as *const libc::c_void;
+
+        self.ops.total += 1;
 
         println!("Getting document");
         unsafe {
@@ -61,6 +75,8 @@ impl Client {
             let res = lcb_wait(self.instance);
             println!("Get Wait Res: {:?}", res);
         }
+
+        self
     }
 }
 

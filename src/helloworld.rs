@@ -9,8 +9,8 @@ use std::ffi::CString;
 use std::ptr;
 
 fn main() {
-    let client = Client::new("couchbase://localhost/default");
-    client.get();
+    let mut client = Client::new("couchbase://localhost/default");
+    client.get("foo");
 
     let connstr = CString::new("couchbase://localhost/default").unwrap();
 
@@ -52,6 +52,8 @@ fn main() {
 
         lcb_destroy(instance);
     }
+
+    println!("{:?}", client);
 }
 
 unsafe extern "C" fn op_callback(_instance: LcbT, cbtype: LcbCallbackType, resp: *const LcbRespBase) {

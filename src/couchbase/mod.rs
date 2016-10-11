@@ -110,6 +110,7 @@ pub enum LcbSt { }
 pub type LcbT = *mut LcbSt;
 
 #[repr(C)]
+#[derive(Debug)]
 pub struct LcbCreateSt3 {
     pub connstr: *const c_char,
     pub username: *const c_char,
@@ -126,6 +127,7 @@ impl Default for LcbCreateSt3 {
 }
 
 #[repr(C)]
+#[derive(Debug)]
 pub struct LcbCreateSt {
     version: c_int,
     pub v3: LcbCreateSt3,
@@ -138,6 +140,7 @@ impl Default for LcbCreateSt {
 }
 
 #[repr(C)]
+#[derive(Debug)]
 pub struct LcbRespBase {
     pub cookie: *mut c_void,
     pub key: *const c_void,
@@ -149,6 +152,7 @@ pub struct LcbRespBase {
 }
 
 #[repr(C)]
+#[derive(Debug)]
 pub struct LcbRespGet {
     pub cookie: *mut c_void,
     pub key: *const c_void,
@@ -203,6 +207,7 @@ pub enum LcbRespFlags {
 }
 
 #[repr(u32)]
+#[derive(Debug)]
 pub enum LcbKvBufType {
     LcbKvCopy = 0,
     LcbKvContig = 1,
@@ -212,18 +217,21 @@ pub enum LcbKvBufType {
 }
 
 #[repr(C)]
+#[derive(Debug)]
 pub struct LcbKeyBuf {
     pub _type: LcbKvBufType,
     pub contig: LcbContigBuf,
 }
 
 #[repr(C)]
+#[derive(Debug)]
 pub struct LcbContigBuf {
     pub bytes: *const c_void,
     pub nbytes: c_ulong,
 }
 
 #[repr(C)]
+#[derive(Debug)]
 pub struct LcbCmdGet {
     pub cmdflags: u32,
     pub exptime: u32,
