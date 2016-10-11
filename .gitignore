@@ -7,3 +7,7 @@
 Cargo.lock
 target
 Cargo.lock
+
+# Doc Graphviz
+cargo-count.dot
+rainbow-graph.png

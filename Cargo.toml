@@ -17,4 +17,5 @@ path = "src/lib.rs"
 
 [[bin]]
 name = "gauc"
+doc = false
 path = "src/main.rs"
