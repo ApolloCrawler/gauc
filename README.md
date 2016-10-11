@@ -43,6 +43,15 @@ $ cargo build
 
 For list of all examples see [examples folder](https://github.com/korczis/gauc/tree/master/examples)
 
+#### couchbase - Low Level Couchbase Access
+
+```
+$ cargo build --example couchbase
+    Finished debug [unoptimized + debuginfo] target(s) in 0.0 secs
+```
+
+#### hello_world - Initialize High Level Couchbase Client
+
 ```
 $ cargo build --example hello_world
    Compiling gauc v0.1.0 (file:///Users/tomaskorcak/dev/microcrawler/gauc)
