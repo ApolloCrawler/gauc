@@ -1,0 +1,15 @@
+[package]
+name = "gauc"
+version = "0.1.0"
+authors = ["Tomas Korcak <korczis@gmail.com>"]
+
+[dependencies]
+libc = "0.2.16"
+
+[lib]
+name = "gauc"
+path = "src/lib.rs"
+
+[[bin]]
+name = "gauc"
+path = "src/helloworld.rs"
