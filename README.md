@@ -45,14 +45,14 @@ $ cargo build
 
 For list of all examples see [examples folder](https://github.com/korczis/gauc/tree/master/examples)
 
-#### couchbase - Low Level Couchbase Access
+#### [couchbase](https://github.com/korczis/gauc/blob/master/examples/couchbase.rs) - Low Level Couchbase Access
 
 ```
 $ cargo build --example couchbase
     Finished debug [unoptimized + debuginfo] target(s) in 0.0 secs
 ```
 
-#### hello_world - Initialize High Level Couchbase Client
+#### [hello_world](https://github.com/korczis/gauc/blob/master/examples/hello_world.rs) - Initialize High Level Couchbase Client
 
 ```
 $ cargo build --example hello_world
