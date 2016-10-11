@@ -4,12 +4,13 @@ extern crate libc;
 use gauc::client::*;
 use gauc::couchbase::*;
 
+use std::ffi::CStr;
 use std::ffi::CString;
 use std::ptr;
-use std::ffi::CStr;
 
 fn main() {
-    /* let client = */ Client::new("couchbase://localhost/default");
+    let client = Client::new("couchbase://localhost/default");
+    client.get();
 
     let connstr = CString::new("couchbase://localhost/default").unwrap();
 
@@ -34,7 +35,7 @@ fn main() {
             CStr::from_ptr(lcb_strerror(instance, res)).to_str().unwrap() // description
         );
 
-        lcb_install_callback3(instance, LcbCallbackType::LcbCallbackGet ,Some(op_callback));
+        lcb_install_callback3(instance, LcbCallbackType::LcbCallbackGet, Some(op_callback));
 
         let key = "foo";
         let ckey = CString::new(key).unwrap();
@@ -54,7 +55,6 @@ fn main() {
 }
 
 unsafe extern "C" fn op_callback(_instance: LcbT, cbtype: LcbCallbackType, resp: *const LcbRespBase) {
-
     match cbtype {
         LcbCallbackType::LcbCallbackGet => {
             println!("> Get Callback!");
