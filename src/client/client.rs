@@ -2,7 +2,7 @@ extern crate libc;
 
 use std::ffi::CStr;
 use std::ffi::CString;
-use std::{ptr};
+use std::{ptr, thread, time};
 
 use super::super::couchbase::*;
 
@@ -59,6 +59,7 @@ impl Client {
     }
 
     pub fn get(&mut self, key: &str) -> &mut Client {
+        println!("Getting document with id \"{}\"", key);
         let ckey = CString::new(key).unwrap();
         let mut gcmd = LcbCmdGet::default();
         gcmd.key._type = LcbKvBufType::LcbKvCopy;
@@ -66,7 +67,6 @@ impl Client {
 
         self.ops.total += 1;
 
-        println!("Getting document");
         unsafe {
             let res = lcb_get3(self.instance, ptr::null(), &gcmd as *const LcbCmdGet);
             println!("Get Res: {:?}", res);
@@ -78,8 +78,28 @@ impl Client {
         self
     }
 
-    pub fn wait(&mut self) {
+    pub fn ops_finished(&mut self) -> bool {
+        return self.ops.total == 0;
+    }
 
+    pub fn wait(&mut self) {
+         let interval = time::Duration::from_millis(100);
+         while self.ops_finished() == false {
+             thread::sleep(interval);
+         }
+    }
+
+    pub fn wait_max(&mut self, max_msec: usize) {
+        let mut t = 0 as usize;
+        let interval = time::Duration::from_millis(100);
+        while self.ops_finished() == false {
+            thread::sleep(interval);
+            t += 100;
+
+            if t > max_msec {
+                break;
+            }
+        }
     }
 }
 
