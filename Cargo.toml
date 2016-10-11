@@ -4,6 +4,7 @@ version = "0.1.0"
 authors = ["Tomas Korcak <korczis@gmail.com>"]
 
 [dependencies]
+clap = "*"
 libc = "0.2.16"
 
 [lib]
@@ -12,4 +13,4 @@ path = "src/lib.rs"
 
 [[bin]]
 name = "gauc"
-path = "src/helloworld.rs"
+path = "src/main.rs"

@@ -1,6 +1,8 @@
+extern crate clap;
 extern crate gauc;
 extern crate libc;
 
+use clap::{App};
 use gauc::client::*;
 use gauc::couchbase::*;
 
@@ -8,7 +10,16 @@ use std::ffi::CStr;
 use std::ffi::CString;
 use std::ptr;
 
+const DESCRIPTION: &'static str = "Couchbase Rust Adapter / CLI"; // env!("CARGO_PKG_DESCRIPTION");
+const VERSION: &'static str = env!("CARGO_PKG_VERSION");
+
 fn main() {
+    // Specify program options
+    let _matches = App::new(DESCRIPTION)
+        .version(VERSION)
+        .author("Tomas Korcak <korczis@gmail.com>")
+        .get_matches();
+
     let mut client = Client::new("couchbase://localhost/default");
     client.get("foo");
 
@@ -53,6 +64,7 @@ fn main() {
         lcb_destroy(instance);
     }
 
+    client.wait();
     println!("{:?}", client);
 }
 
@@ -63,7 +75,7 @@ unsafe extern "C" fn op_callback(_instance: LcbT, cbtype: LcbCallbackType, resp:
             let gresp = resp as *const LcbRespGet;
             println!(">> CAS: {}", (*gresp).cas);
 
-            if  (*gresp).value.is_null() == false {
+            if (*gresp).value.is_null() == false {
                 let res = CString::from_raw((*gresp).value as *mut i8);
                 let length = (*gresp).nvalue as usize;
 

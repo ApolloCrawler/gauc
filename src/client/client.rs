@@ -2,7 +2,6 @@ extern crate libc;
 
 use std::ffi::CStr;
 use std::ffi::CString;
-use std::fmt;
 use std::{ptr};
 
 use super::super::couchbase::*;
@@ -77,6 +76,10 @@ impl Client {
         }
 
         self
+    }
+
+    pub fn wait(&mut self) {
+
     }
 }
 
