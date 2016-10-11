@@ -26,4 +26,10 @@ matrix:
 
 before_install:
   - ./.travis/install.sh
-
+  - cargo graph \
+    --optional-line-style dashed \
+    --optional-line-color red \
+    --optional-shape box \
+    --build-shape diamond \
+    --build-color green \
+    --build-line-color orange
