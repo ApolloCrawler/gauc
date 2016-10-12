@@ -37,7 +37,7 @@ fn main() {
         let key = "foo";
         let ckey = CString::new(key).unwrap();
         let mut gcmd = CmdGet::default();
-        gcmd.key._type = KvBufferType::LcbKvCopy;
+        gcmd.key._type = KvBufferType::Copy;
         gcmd.key.contig.bytes = ckey.as_ptr() as *const libc::c_void;
         gcmd.key.contig.nbytes = key.len() as u64;
 

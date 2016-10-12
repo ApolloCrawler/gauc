@@ -5,7 +5,7 @@ use std::ptr;
 use super::super::funcs::lcb_strerror;
 
 #[repr(u32)]
-#[derive(Debug,Clone,Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum ErrorType {
     Success = 0,
     AuthContinue = 1,

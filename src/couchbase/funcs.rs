@@ -5,7 +5,7 @@ use super::types::callback_type::CallbackType;
 use super::types::cmd_get::CmdGet;
 use super::types::error_type::ErrorType;
 use super::types::create_st::CreateSt;
-use super::types::resp_base::ResponseBase;
+use super::types::response_base::ResponseBase;
 
 pub type LcbRespCallback = Option<unsafe extern "C" fn(instance: LcbT, cbtype: CallbackType, resp: *const ResponseBase)>;
 
@@ -20,4 +20,3 @@ extern {
     pub fn lcb_install_callback3(instance: LcbT, cbtype: CallbackType, cb: LcbRespCallback) -> LcbRespCallback;
     pub fn lcb_get3(instance: LcbT, cookie: *const c_void, cmd: *const CmdGet) -> ErrorType;
 }
-

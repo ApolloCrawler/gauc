@@ -30,18 +30,29 @@ impl Client {
 
         unsafe {
             let res = lcb_create(&mut instance as *mut LcbT, &opts as *const CreateSt);
+            if res != ErrorType::Success {
+                println!("lcb_connect() failed - {:?}", res);
+            }
 
             println!("Connecting to {}", uri);
 
-            /* let res = */ lcb_connect(instance);
-            /* let res = */ lcb_wait(instance);
-            /* let res = */ lcb_get_bootstrap_status(instance);
+            let res = lcb_connect(instance);
+            if res != ErrorType::Success {
+                println!("lcb_connect() failed - {:?}", res);
+            }
 
-            println!(
-                "Bootstrap Status: {:?} \"{}\"",
-                res,
-                CStr::from_ptr(lcb_strerror(instance, res)).to_str().unwrap() // description
-            );
+            let res = lcb_wait(instance);
+            if res != ErrorType::Success {
+                println!("lcb_wait() failed - {:?}", res);
+            }
+
+            let res = lcb_get_bootstrap_status(instance);
+            if res != ErrorType::Success {
+                println!("lcb_get_bootstrap_status() failed - {:?}, \"{}\"",
+                         res,
+                         CStr::from_ptr(lcb_strerror(instance, res)).to_str().unwrap()
+                );
+            }
 
             lcb_install_callback3(instance, CallbackType::Get, Some(op_callback));
 
@@ -59,20 +70,24 @@ impl Client {
     }
 
     pub fn get(&mut self, key: &str) -> &mut Client {
-        println!("Getting document with id \"{}\"", key);
-        let ckey = CString::new("foo").unwrap();
+        let ckey = CString::new(key).unwrap();
         let mut gcmd = CmdGet::default();
         gcmd.key._type = KvBufferType::Copy;
         gcmd.key.contig.bytes = ckey.as_ptr() as *const libc::c_void;
+        gcmd.key.contig.nbytes = key.len() as u64;
 
         self.ops.total += 1;
 
         unsafe {
             let res = lcb_get3(self.instance, ptr::null(), &gcmd as *const CmdGet);
-            println!("Get Res: {:?}", res);
+            if res != ErrorType::Success {
+                println!("lcb_get3() failed - {:?}", res);
+            }
 
             let res = lcb_wait(self.instance);
-            println!("Get Wait Res: {:?}", res);
+            if res != ErrorType::Success {
+                println!("lcb_wait() failed - {:?}", res);
+            }
         }
 
         self
@@ -120,15 +135,15 @@ impl Drop for Client {
 unsafe extern "C" fn op_callback(_instance: LcbT, cbtype: CallbackType, resp: *const ResponseBase) {
     match cbtype {
         CallbackType::Get => {
-            println!("> Get Callback!");
             let gresp = resp as *const ResponseGet;
-            println!(">> CAS: {}", (*gresp).cas);
+
+            // println!(">> CAS: {}", (*gresp).cas);
 
             if  (*gresp).value.is_null() == false {
                 let res = CString::from_raw((*gresp).value as *mut i8);
                 let length = (*gresp).nvalue as usize;
 
-                println!(">> Content: {}", &res.into_string().unwrap()[..length]);
+                println!("{}", &res.into_string().unwrap()[..length]);
             }
         },
         _ => panic!("! Unknown Callback...")
