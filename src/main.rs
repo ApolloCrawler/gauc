@@ -14,6 +14,5 @@ fn main() {
         .author("Tomas Korcak <korczis@gmail.com>")
         .get_matches();
 
-    let client = Client::new("couchbase://localhost/default");
-    println!("{:?}", client);
+    let _client = Client::new("couchbase://localhost/default");
 }

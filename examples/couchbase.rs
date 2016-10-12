@@ -14,9 +14,9 @@ fn main() {
     let mut cropts = CreateSt::default();
     cropts.v3.connstr = connstr.as_ptr();
 
-    let mut instance: LcbT = ptr::null_mut();
+    let mut instance: Instance = ptr::null_mut();
     unsafe {
-        let res = lcb_create(&mut instance as *mut LcbT, &cropts as *const CreateSt);
+        let res = lcb_create(&mut instance as *mut Instance, &cropts as *const CreateSt);
         println!("Create Res: {:?}", res);
 
         let res = lcb_connect(instance);
@@ -51,7 +51,7 @@ fn main() {
     }
 }
 
-unsafe extern "C" fn op_callback(_instance: LcbT, cbtype: CallbackType, resp: *const ResponseBase) {
+unsafe extern "C" fn op_callback(_instance: Instance, cbtype: CallbackType, resp: *const ResponseBase) {
     match cbtype {
         CallbackType::Get => {
             println!("> Get Callback!");

@@ -14,7 +14,7 @@ pub struct ClientOps {
 #[derive(Debug)]
 pub struct Client {
     pub opts: CreateSt,
-    pub instance: LcbT,
+    pub instance: Instance,
     pub uri: String,
     pub ops: ClientOps
 }
@@ -26,10 +26,10 @@ impl Client {
         let mut opts = CreateSt::default();
         opts.v3.connstr = connstr.as_ptr();
 
-        let mut instance: LcbT = ptr::null_mut();
+        let mut instance: Instance = ptr::null_mut();
 
         unsafe {
-            let res = lcb_create(&mut instance as *mut LcbT, &opts as *const CreateSt);
+            let res = lcb_create(&mut instance as *mut Instance, &opts as *const CreateSt);
             if res != ErrorType::Success {
                 println!("lcb_connect() failed - {:?}", res);
             }
@@ -132,7 +132,7 @@ impl Drop for Client {
     }
 }
 
-unsafe extern "C" fn op_callback(_instance: LcbT, cbtype: CallbackType, resp: *const ResponseBase) {
+unsafe extern "C" fn op_callback(_instance: Instance, cbtype: CallbackType, resp: *const ResponseBase) {
     match cbtype {
         CallbackType::Get => {
             let gresp = resp as *const ResponseGet;
