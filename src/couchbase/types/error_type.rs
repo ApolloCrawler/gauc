@@ -1,0 +1,100 @@
+use std::ffi::CStr;
+use std::fmt;
+use std::ptr;
+
+use super::super::funcs::lcb_strerror;
+
+#[repr(u32)]
+#[derive(Debug,Clone,Copy)]
+pub enum LcbErrorT {
+    LcbSuccess = 0,
+    LcbAuthContinue = 1,
+    LcbAuthError = 2,
+    LcbDeltaBadval = 3,
+    LcbE2big = 4,
+    LcbEbusy = 5,
+    LcbEinternal = 6,
+    LcbEinval = 7,
+    LcbEnomem = 8,
+    LcbErange = 9,
+    LcbError = 10,
+    LcbEtmpfail = 11,
+    LcbKeyEexists = 12,
+    LcbKeyEnoent = 13,
+    LcbDlopenFailed = 14,
+    LcbDlsymFailed = 15,
+    LcbNetworkError = 16,
+    LcbNotMyVbucket = 17,
+    LcbNotStored = 18,
+    LcbNotSupported = 19,
+    LcbUnknownCommand = 20,
+    LcbUnknownHost = 21,
+    LcbProtocolError = 22,
+    LcbEtimedout = 23,
+    LcbConnectError = 24,
+    LcbBucketEnoent = 25,
+    LcbClientEnomem = 26,
+    LcbClientEnoconf = 27,
+    LcbEbadhandle = 28,
+    LcbServerBug = 29,
+    LcbPluginVersionMismatch = 30,
+    LcbInvalidHostFormat = 31,
+    LcbInvalidChar = 32,
+    LcbDurabilityEtoomany = 33,
+    LcbDuplicateCommands = 34,
+    LcbNoMatchingServer = 35,
+    LcbBadEnvironment = 36,
+    LcbBusy = 37,
+    LcbInvalidUsername = 38,
+    LcbConfigCacheInvalid = 39,
+    LcbSaslmechUnavailable = 40,
+    LcbTooManyRedirects = 41,
+    LcbMapChanged = 42,
+    LcbIncompletePacket = 43,
+    LcbEconnrefused = 44,
+    LcbEsockshutdown = 45,
+    LcbEconnreset = 46,
+    LcbEcantgetport = 47,
+    LcbEfdlimitreached = 48,
+    LcbEnetunreach = 49,
+    LcbEctlUnknown = 50,
+    LcbEctlUnsuppmode = 51,
+    LcbEctlBadarg = 52,
+    LcbEmptyKey = 53,
+    LcbSslError = 54,
+    LcbSslCantverify = 55,
+    LcbSchedfailInternal = 56,
+    LcbClientFeatureUnavailable = 57,
+    LcbOptionsConflict = 58,
+    LcbHttpError = 59,
+    LcbDurabilityNoMutationTokens = 60,
+    LcbUnknownMemcachedError = 61,
+    LcbMutationLost = 62,
+    LcbSubdocPathEnoent = 63,
+    LcbSubdocPathMismatch = 64,
+    LcbSubdocPathEinval = 65,
+    LcbSubdocPathE2big = 66,
+    LcbSubdocDocE2deep = 67,
+    LcbSubdocValueCantinsert = 68,
+    LcbSubdocDocNotjson = 69,
+    LcbSubdocNumErange = 70,
+    LcbSubdocBadDelta = 71,
+    LcbSubdocPathEexists = 72,
+    LcbSubdocMultiFailure = 73,
+    LcbSubdocValueE2deep = 74,
+    LcbEinvalMcd = 75,
+    LcbEmptyPath = 76,
+    LcbUnknownSdcmd = 77,
+    LcbEnoCommands = 78,
+    LcbQueryError = 79,
+    LcbMaxError = 4096,
+}
+
+impl fmt::Display for LcbErrorT {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let description = unsafe {
+            CStr::from_ptr(lcb_strerror(ptr::null_mut(), *self)).to_str().unwrap()
+        };
+        write!(f,"{} ({:?})", description, self)
+    }
+}

@@ -1,0 +1,25 @@
+#[repr(u32)]
+#[derive(Debug, Clone, Copy)]
+pub enum LcbCallbackType {
+    LcbCallbackDefault = 0,
+    LcbCallbackGet = 1,
+    LcbCallbackStore = 2,
+    LcbCallbackCounter = 3,
+    LcbCallbackTouch = 4,
+    LcbCallbackRemove = 5,
+    LcbCallbackUnlock = 6,
+    LcbCallbackStats = 7,
+    LcbCallbackVersions = 8,
+    LcbCallbackVerbosity = 9,
+    LcbCallbackFlush = 10,
+    LcbCallbackObserve = 11,
+    LcbCallbackGetreplica = 12,
+    LcbCallbackEndure = 13,
+    LcbCallbackHttp = 14,
+    LcbCallbackCbflush = 15,
+    LcbCallbackObseqno = 16,
+    LcbCallbackStoredur = 17,
+    LcbCallbackSdlookup = 18,
+    LcbCallbackSdmutate = 19,
+    LcbCallbackMax = 20,
+}
