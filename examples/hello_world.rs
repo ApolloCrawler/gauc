@@ -4,5 +4,10 @@ use gauc::client::*;
 
 fn main() {
     let mut client = Client::new("couchbase://localhost/default");
-    client.get("foo");
+
+    fn cb_get(res: &str) {
+        println!("{}", res);
+    };
+
+    client.get("foo", &cb_get);
 }

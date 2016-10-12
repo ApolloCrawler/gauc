@@ -69,7 +69,7 @@ impl Client {
         }
     }
 
-    pub fn get(&mut self, key: &str) -> &mut Client {
+    pub fn get(&mut self, key: &str, callback: &Fn(&str)) -> &mut Client {
         let ckey = CString::new(key).unwrap();
         let mut gcmd = CmdGet::default();
         gcmd.key._type = KvBufferType::Copy;
@@ -89,6 +89,8 @@ impl Client {
                 println!("lcb_wait() failed - {:?}", res);
             }
         }
+
+        callback("Hello from callback!");
 
         self
     }
