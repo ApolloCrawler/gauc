@@ -13,7 +13,7 @@ pub struct ClientOps {
 
 #[derive(Debug)]
 pub struct Client {
-    pub opts: LcbCreateSt,
+    pub opts: CreateSt,
     pub instance: LcbT,
     pub uri: String,
     pub ops: ClientOps
@@ -23,13 +23,13 @@ impl Client {
     pub fn new(uri: &str) -> Client {
         let connstr = CString::new(uri).unwrap();
 
-        let mut opts = LcbCreateSt::default();
+        let mut opts = CreateSt::default();
         opts.v3.connstr = connstr.as_ptr();
 
         let mut instance: LcbT = ptr::null_mut();
 
         unsafe {
-            let res = lcb_create(&mut instance as *mut LcbT, &opts as *const LcbCreateSt);
+            let res = lcb_create(&mut instance as *mut LcbT, &opts as *const CreateSt);
 
             println!("Connecting to {}", uri);
 
@@ -43,7 +43,7 @@ impl Client {
                 CStr::from_ptr(lcb_strerror(instance, res)).to_str().unwrap() // description
             );
 
-            lcb_install_callback3(instance, LcbCallbackType::LcbCallbackGet, Some(op_callback));
+            lcb_install_callback3(instance, CallbackType::Get, Some(op_callback));
 
             let ops = ClientOps {
                 total: 0
@@ -61,14 +61,14 @@ impl Client {
     pub fn get(&mut self, key: &str) -> &mut Client {
         println!("Getting document with id \"{}\"", key);
         let ckey = CString::new("foo").unwrap();
-        let mut gcmd = LcbCmdGet::default();
-        gcmd.key._type = LcbKvBufType::LcbKvCopy;
+        let mut gcmd = CmdGet::default();
+        gcmd.key._type = KvBufferType::Copy;
         gcmd.key.contig.bytes = ckey.as_ptr() as *const libc::c_void;
 
         self.ops.total += 1;
 
         unsafe {
-            let res = lcb_get3(self.instance, ptr::null(), &gcmd as *const LcbCmdGet);
+            let res = lcb_get3(self.instance, ptr::null(), &gcmd as *const CmdGet);
             println!("Get Res: {:?}", res);
 
             let res = lcb_wait(self.instance);
@@ -117,11 +117,11 @@ impl Drop for Client {
     }
 }
 
-unsafe extern "C" fn op_callback(_instance: LcbT, cbtype: LcbCallbackType, resp: *const LcbRespBase) {
+unsafe extern "C" fn op_callback(_instance: LcbT, cbtype: CallbackType, resp: *const ResponseBase) {
     match cbtype {
-        LcbCallbackType::LcbCallbackGet => {
+        CallbackType::Get => {
             println!("> Get Callback!");
-            let gresp = resp as *const LcbRespGet;
+            let gresp = resp as *const ResponseGet;
             println!(">> CAS: {}", (*gresp).cas);
 
             if  (*gresp).value.is_null() == false {
