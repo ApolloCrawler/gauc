@@ -196,3 +196,8 @@ unsafe extern "C" fn op_callback(_instance: Instance, cbtype: CallbackType, resp
         _ => error!("! Unknown Callback...")
     };
 }
+
+#[test]
+fn it_works() {
+    assert!(1 == 1);
+}
