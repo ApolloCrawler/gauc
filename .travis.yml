@@ -27,7 +27,7 @@ matrix:
 
 before_install:
   - ./.travis/install.sh
-  - cargo install count
+  - cargo install cargo-count
 
 after_script:
   - make
