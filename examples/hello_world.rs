@@ -9,5 +9,5 @@ fn main() {
         println!("{}", res);
     };
 
-    client.get("foo", &cb_get);
+    client.get("foo", |data: &str| println!("{}", data));
 }

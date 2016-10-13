@@ -1,5 +1,6 @@
 extern crate libc;
 
+use libc::{c_void};
 use std::ffi::CStr;
 use std::ffi::CString;
 use std::{ptr, thread, time};
@@ -69,7 +70,9 @@ impl Client {
         }
     }
 
-    pub fn get(&mut self, key: &str, callback: &Fn(&str)) -> &mut Client {
+    pub fn get<F>(&mut self, key: &str, callback: F) -> &mut Client
+        where F: Fn(&str)
+    {
         let ckey = CString::new(key).unwrap();
         let mut gcmd = CmdGet::default();
         gcmd.key._type = KvBufferType::Copy;
@@ -79,7 +82,13 @@ impl Client {
         self.ops.total += 1;
 
         unsafe {
-            let res = lcb_get3(self.instance, ptr::null(), &gcmd as *const CmdGet);
+            let boxed: Box<Fn(&str)> = Box::new(|res: &str| {
+                callback(res);
+            });
+
+            let user_data = &boxed as *const _ as *mut c_void;
+
+            let res = lcb_get3(self.instance, user_data, &gcmd as *const CmdGet);
             if res != ErrorType::Success {
                 println!("lcb_get3() failed - {:?}", res);
             }
@@ -89,8 +98,6 @@ impl Client {
                 println!("lcb_wait() failed - {:?}", res);
             }
         }
-
-        callback("Hello from callback!");
 
         self
     }
@@ -139,13 +146,14 @@ unsafe extern "C" fn op_callback(_instance: Instance, cbtype: CallbackType, resp
         CallbackType::Get => {
             let gresp = resp as *const ResponseGet;
 
-            // println!(">> CAS: {}", (*gresp).cas);
-
             if  (*gresp).value.is_null() == false {
                 let res = CString::from_raw((*gresp).value as *mut i8);
                 let length = (*gresp).nvalue as usize;
 
-                println!("{}", &res.into_string().unwrap()[..length]);
+                let text = &res.into_string().unwrap()[..length];
+                let cookie = (*gresp).cookie;
+                let callback = cookie as *const Box<Fn(&str)>;
+                (*callback)(text);
             }
         },
         _ => panic!("! Unknown Callback...")
