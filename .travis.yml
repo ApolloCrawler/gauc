@@ -28,6 +28,7 @@ matrix:
 before_install:
   - ./.travis/install.sh
   - cargo install cargo-count --force
+  - cargo install cargo-outdated --force
 
 after_script:
   - make
