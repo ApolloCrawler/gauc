@@ -31,3 +31,8 @@ before_install:
 
 after_script:
   - make
+
+notifications:
+  email:
+    - korczis@gmail.com
+    - lv.bossek@gmail.com
