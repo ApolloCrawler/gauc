@@ -84,7 +84,7 @@ size-release:
 size: size-debug size-release
 
 stats:
-		cargo count --separator , --unsafe-statistics
+		cargo count --separator, --unsafe-statistics
 
 strip:
 		strip ./target/release/gauc
