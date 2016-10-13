@@ -129,11 +129,13 @@ Couchbase Rust Adapter / CLI 0.1.0
 Tomas Korcak <korczis@gmail.com>
 
 USAGE:
-    gauc
+    gauc [FLAGS]
 
 FLAGS:
-    -h, --help       Prints help information
-    -V, --version    Prints version information
+    -h, --help           Prints help information
+    -i, --interactive    Interactive mode
+    -V, --version        Prints version information
+    -v, --verbose        Verbose mode
 ```
 
 ## License
