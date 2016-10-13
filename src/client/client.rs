@@ -56,6 +56,7 @@ impl Client {
             }
 
             lcb_install_callback3(instance, CallbackType::Get, Some(op_callback));
+            lcb_install_callback3(instance, CallbackType::Store, Some(op_callback));
 
             let ops = ClientOps {
                 total: 0
@@ -89,6 +90,40 @@ impl Client {
             let user_data = &boxed as *const _ as *mut c_void;
 
             let res = lcb_get3(self.instance, user_data, &gcmd as *const CmdGet);
+            if res != ErrorType::Success {
+                println!("lcb_get3() failed - {:?}", res);
+            }
+
+            let res = lcb_wait(self.instance);
+            if res != ErrorType::Success {
+                println!("lcb_wait() failed - {:?}", res);
+            }
+        }
+
+        self
+    }
+
+    pub fn store<F>(&mut self, key: &str, value: &str, callback: F) -> &mut Client
+        where F: Fn(&str)
+    {
+        let ckey = CString::new(key).unwrap();
+        let cvalue = CString::new(value).unwrap();
+        let mut gcmd = CmdStore::default();
+        gcmd.key._type = KvBufferType::Copy;
+        gcmd.key.contig.bytes = ckey.as_ptr() as *const libc::c_void;
+        gcmd.key.contig.nbytes = key.len() as u64;
+        gcmd.value._type = KvBufferType::Copy;
+        gcmd.value.contig.bytes = cvalue.as_ptr() as *const libc::c_void;
+        gcmd.value.contig.nbytes = value.len() as u64;
+
+        unsafe {
+            let boxed: Box<Fn(&str)> = Box::new(|res: &str| {
+                callback(res);
+            });
+
+            let user_data = &boxed as *const _ as *mut c_void;
+
+            let res = lcb_store3(self.instance, user_data, &gcmd as *const CmdStore);
             if res != ErrorType::Success {
                 println!("lcb_get3() failed - {:?}", res);
             }
@@ -155,6 +190,13 @@ unsafe extern "C" fn op_callback(_instance: Instance, cbtype: CallbackType, resp
                 let callback = cookie as *const Box<Fn(&str)>;
                 (*callback)(text);
             }
+        },
+        CallbackType::Store => {
+           let gresp = resp as *const ResponseStore;
+
+            let cookie = (*gresp).cookie;
+            let callback = cookie as *const Box<Fn(&str)>;
+            (*callback)("Response");
         },
         _ => panic!("! Unknown Callback...")
     };

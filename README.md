@@ -17,6 +17,11 @@ This project was originaly inspired by [couchbase-rs](https://github.com/daschl/
 
 ## Features
 
+### High Level Client Functions
+
+- get
+- store
+
 ### Wrapped functions
 
 - lcb_create
