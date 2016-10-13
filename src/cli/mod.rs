@@ -22,6 +22,8 @@ pub fn main(_args: &clap::ArgMatches) {
             "info" => {
                 println!("{:?}", client);
             },
+            "" => {
+            },
             _ => {
                 println!("Unknown command \"{}\"", cmd);
             }
