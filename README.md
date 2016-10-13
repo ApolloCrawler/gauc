@@ -91,3 +91,10 @@ FLAGS:
     -h, --help       Prints help information
     -V, --version    Prints version information
 ```
+
+## License
+Copyright 2016 Tomas Korcak <korczis@gmail.com>.
+
+Licensed under the MIT License.
+
+See [LICENSE](https://github.com/korczis/gauc/blob/master/LICENSE) for further details.
