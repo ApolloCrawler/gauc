@@ -1,3 +1,4 @@
+use std::ffi::CString;
 use libc::{c_ulong, c_ulonglong, c_void};
 
 use super::error_type::ErrorType;
@@ -14,4 +15,16 @@ pub struct ResponseStore {
     pub version: u16,
     pub rflags: u16,
     pub operation: Operation
+}
+
+impl ResponseStore {
+    pub fn key(&self) -> String {
+        unsafe {
+            let res = CString::from_raw(self.key as *mut i8);
+            let length = self.nkey as usize;
+
+            let text = &res.into_string().unwrap()[..length];
+            return text.to_string();
+        }
+    }
 }

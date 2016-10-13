@@ -1,3 +1,4 @@
+use std::ffi::CString;
 use libc::{c_ulong, c_ulonglong, c_void};
 
 use super::error_type::ErrorType;
@@ -17,4 +18,26 @@ pub struct ResponseGet {
     pub bufh: *mut c_void,
     pub datatype: u8,
     pub itmflags: u32,
+}
+
+impl ResponseGet {
+    pub fn key(&self) -> String {
+        unsafe {
+            let res = CString::from_raw(self.key as *mut i8);
+            let length = self.nkey as usize;
+
+            let text = &res.into_string().unwrap()[..length];
+            return text.to_string();
+        }
+    }
+
+    pub fn value(&self) -> String {
+        unsafe {
+            let res = CString::from_raw(self.value as *mut i8);
+            let length = self.nvalue as usize;
+
+            let text = &res.into_string().unwrap()[..length];
+            return text.to_string();
+        }
+    }
 }

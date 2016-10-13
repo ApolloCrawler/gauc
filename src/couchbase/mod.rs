@@ -1,6 +1,6 @@
 // Declare modules
-mod funcs;
-mod types;
+pub mod funcs;
+pub mod types;
 
 // Use modules
 pub use self::funcs::*;

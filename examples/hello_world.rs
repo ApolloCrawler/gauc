@@ -1,24 +1,27 @@
 extern crate gauc;
 
 use gauc::client::*;
+use gauc::couchbase::types::response_get::ResponseGet;
+use gauc::couchbase::types::response_store::ResponseStore;
 
 fn main() {
     let mut client = Client::new("couchbase://localhost/default");
 
-    fn cb_set(res: &str) {
+    fn cb_set(response: &ResponseStore) {
         println!("Data stored.");
-        println!("{}", res);
+        println!("{:?   }", response);
     };
 
-    fn cb_get(res: &str) {
-        println!("{}", res);
-    };
-
+    // Store some data
     client.store("bar", "{\"msg\": \"This is test!\"}", &cb_set);
+
+    fn cb_get(response: &ResponseGet) {
+        println!("{}", response.value());
+    };
 
     // Get data - use function
     client.get("foo", &cb_get);
 
     // Get data - use in-place closure
-    client.get("foo", |data: &str| println!("{}", data));
+    client.get("foo", |response: &ResponseGet| println!("{}", response.value()));
 }

@@ -72,7 +72,7 @@ impl Client {
     }
 
     pub fn get<F>(&mut self, key: &str, callback: F) -> &mut Client
-        where F: Fn(&str)
+        where F: Fn(&ResponseGet)
     {
         let ckey = CString::new(key).unwrap();
         let mut gcmd = CmdGet::default();
@@ -83,8 +83,8 @@ impl Client {
         self.ops.total += 1;
 
         unsafe {
-            let boxed: Box<Fn(&str)> = Box::new(|res: &str| {
-                callback(res);
+            let boxed: Box<Fn(&ResponseGet)> = Box::new(|response: &ResponseGet| {
+                callback(response);
             });
 
             let user_data = &boxed as *const _ as *mut c_void;
@@ -104,7 +104,7 @@ impl Client {
     }
 
     pub fn store<F>(&mut self, key: &str, value: &str, callback: F) -> &mut Client
-        where F: Fn(&str)
+        where F: Fn(&ResponseStore)
     {
         let ckey = CString::new(key).unwrap();
         let cvalue = CString::new(value).unwrap();
@@ -117,7 +117,7 @@ impl Client {
         gcmd.value.contig.nbytes = value.len() as u64;
 
         unsafe {
-            let boxed: Box<Fn(&str)> = Box::new(|res: &str| {
+            let boxed: Box<Fn(&ResponseStore)> = Box::new(|res: &ResponseStore| {
                 callback(res);
             });
 
@@ -180,23 +180,16 @@ unsafe extern "C" fn op_callback(_instance: Instance, cbtype: CallbackType, resp
     match cbtype {
         CallbackType::Get => {
             let gresp = resp as *const ResponseGet;
-
-            if  (*gresp).value.is_null() == false {
-                let res = CString::from_raw((*gresp).value as *mut i8);
-                let length = (*gresp).nvalue as usize;
-
-                let text = &res.into_string().unwrap()[..length];
-                let cookie = (*gresp).cookie;
-                let callback = cookie as *const Box<Fn(&str)>;
-                (*callback)(text);
-            }
+            let cookie = (*gresp).cookie;
+            let callback = cookie as *const Box<Fn(&ResponseGet)>;
+            (*callback)(&(*gresp));
         },
         CallbackType::Store => {
-           let gresp = resp as *const ResponseStore;
+            let gresp = resp as *const ResponseStore;
 
             let cookie = (*gresp).cookie;
-            let callback = cookie as *const Box<Fn(&str)>;
-            (*callback)("Response");
+            let callback = cookie as *const Box<Fn(&ResponseStore)>;
+            (*callback)(&(*gresp));
         },
         _ => panic!("! Unknown Callback...")
     };
