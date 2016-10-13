@@ -80,6 +80,40 @@ $ cargo build --example hello_world
     Finished debug [unoptimized + debuginfo] target(s) in 1.7 secs
 ```
 
+## Example
+
+This simple example demonstrates how to use gauc
+
+***Source***
+
+```
+extern crate gauc;
+
+use gauc::client::*;
+use gauc::couchbase::types::response_get::ResponseGet;
+use gauc::couchbase::types::response_store::ResponseStore;
+
+fn main() {
+    let mut client = Client::new("couchbase://localhost/default");
+
+    // Store some data
+    client.store("foo", "{\"msg\": \"This is test!\"}", |response: &ResponseStore| println!("Created new document, CAS: {}", response.cas));
+
+    // Get data
+    client.get("foo", |response: &ResponseGet| println!("{} - {}", response.key(), response.value()));
+}
+```
+
+***Output***
+
+```
+$ ./target/debug/examples/hello_world
+Connecting to couchbase://localhost/default
+Created new document, CAS: 1476374707351322624
+foo - {"msg": "This is test!"}
+Disconnecting from couchbase://localhost/default
+```
+
 ## Usage
 
 ### Show help

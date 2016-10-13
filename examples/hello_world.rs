@@ -7,21 +7,9 @@ use gauc::couchbase::types::response_store::ResponseStore;
 fn main() {
     let mut client = Client::new("couchbase://localhost/default");
 
-    fn cb_set(response: &ResponseStore) {
-        println!("Data stored.");
-        println!("{:?   }", response);
-    };
-
     // Store some data
-    client.store("bar", "{\"msg\": \"This is test!\"}", &cb_set);
+    client.store("foo", "{\"msg\": \"This is test!\"}", |response: &ResponseStore| println!("Created new document, CAS: {}", response.cas));
 
-    fn cb_get(response: &ResponseGet) {
-        println!("{}", response.value());
-    };
-
-    // Get data - use function
-    client.get("foo", &cb_get);
-
-    // Get data - use in-place closure
-    client.get("foo", |response: &ResponseGet| println!("{}", response.value()));
+    // Get data
+    client.get("foo", |response: &ResponseGet| println!("{} - {}", response.key(), response.value()));
 }
