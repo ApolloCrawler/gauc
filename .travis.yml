@@ -32,6 +32,7 @@ before_script:
 before_install:
   - ./.travis/install.sh
   - wget http://packages.couchbase.com/releases/4.1.0/couchbase-server-community_4.1.0-ubuntu12.04_amd64.deb
+  - sudo dpkg -i couchbase-server-community_4.1.0-ubuntu12.04_amd64.deb
   - cargo install cargo-count --force
   - cargo install cargo-graph -- force
   - cargo install cargo-outdated --force
