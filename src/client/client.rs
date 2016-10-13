@@ -116,6 +116,8 @@ impl Client {
         gcmd.value.contig.bytes = cvalue.as_ptr() as *const libc::c_void;
         gcmd.value.contig.nbytes = value.len() as u64;
 
+        self.ops.total += 1;
+
         unsafe {
             let boxed: Box<Fn(&ResponseStore)> = Box::new(|res: &ResponseStore| {
                 callback(res);
