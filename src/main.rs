@@ -1,18 +1,31 @@
 extern crate clap;
 extern crate gauc;
 
-use clap::{App};
-use gauc::client::*;
+use clap::{App, Arg};
+use gauc::cli;
 
-const DESCRIPTION: &'static str = "Couchbase Rust Adapter / CLI"; // env!("CARGO_PKG_DESCRIPTION");
+const DESCRIPTION: &'static str = "Couchbase Rust Adapter / CLI";
 const VERSION: &'static str = env!("CARGO_PKG_VERSION");
 
 fn main() {
     // Specify program options
-    let _matches = App::new(DESCRIPTION)
+    let matches = App::new(DESCRIPTION)
         .version(VERSION)
         .author("Tomas Korcak <korczis@gmail.com>")
+        .arg(Arg::with_name("interactive")
+            .help("Interactive mode")
+            .short("i")
+            .long("interactive")
+        )
+        .arg(Arg::with_name("verbose")
+            .help("Verbose mode")
+            .short("v")
+            .long("verbose")
+            .multiple(true)
+        )
         .get_matches();
 
-    let _client = Client::new("couchbase://localhost/default");
+    if matches.is_present("interactive") {
+        cli::main(&matches);
+    }
 }

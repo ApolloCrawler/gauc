@@ -24,14 +24,15 @@ This project was originaly inspired by [couchbase-rs](https://github.com/daschl/
 
 ### Wrapped functions
 
-- lcb_create
 - lcb_connect
-- lcb_wait
-- lcb_get_bootstrap_status
+- lcb_create
 - lcb_destroy
-- lcb_strerror
-- lcb_install_callback3
 - lcb_get3
+- lcb_get_bootstrap_status
+- lcb_install_callback3
+- lcb_store3
+- lcb_strerror
+- lcb_wait
 
 ## Getting started
 

@@ -32,24 +32,24 @@ impl Client {
         unsafe {
             let res = lcb_create(&mut instance as *mut Instance, &opts as *const CreateSt);
             if res != ErrorType::Success {
-                println!("lcb_connect() failed - {:?}", res);
+                error!("lcb_connect() failed - {:?}", res);
             }
 
-            println!("Connecting to {}", uri);
+            info!("Connecting to {}", uri);
 
             let res = lcb_connect(instance);
             if res != ErrorType::Success {
-                println!("lcb_connect() failed - {:?}", res);
+                error!("lcb_connect() failed - {:?}", res);
             }
 
             let res = lcb_wait(instance);
             if res != ErrorType::Success {
-                println!("lcb_wait() failed - {:?}", res);
+                error!("lcb_wait() failed - {:?}", res);
             }
 
             let res = lcb_get_bootstrap_status(instance);
             if res != ErrorType::Success {
-                println!("lcb_get_bootstrap_status() failed - {:?}, \"{}\"",
+                error!("lcb_get_bootstrap_status() failed - {:?}, \"{}\"",
                          res,
                          CStr::from_ptr(lcb_strerror(instance, res)).to_str().unwrap()
                 );
@@ -100,7 +100,7 @@ impl Client {
             }
         }
 
-        self
+        return self;
     }
 
     pub fn store<F>(&mut self, key: &str, value: &str, callback: F) -> &mut Client
@@ -136,7 +136,7 @@ impl Client {
             }
         }
 
-        self
+        return self;
     }
 
     pub fn ops_unfinished_count(&self) -> usize {
@@ -172,7 +172,7 @@ impl Client {
 impl Drop for Client {
     fn drop(&mut self) {
         unsafe {
-            println!("Disconnecting from {}", self.uri);
+            info!("Disconnecting from {}", self.uri);
             lcb_destroy(self.instance);
         }
     }
@@ -193,6 +193,6 @@ unsafe extern "C" fn op_callback(_instance: Instance, cbtype: CallbackType, resp
             let callback = cookie as *const Box<Fn(&ResponseStore)>;
             (*callback)(&(*gresp));
         },
-        _ => panic!("! Unknown Callback...")
+        _ => error!("! Unknown Callback...")
     };
 }
