@@ -1,10 +1,10 @@
 use libc::{c_ulong, c_ulonglong, c_void};
 
-use super::error_type::ErrorType;
+use super::super::error_type::ErrorType;
 
 #[repr(C)]
 #[derive(Debug)]
-pub struct ResponseBase {
+pub struct Base {
     pub cookie: *mut c_void,
     pub key: *const c_void,
     pub nkey: c_ulong,

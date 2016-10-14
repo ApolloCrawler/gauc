@@ -1,12 +1,12 @@
 use std::ffi::CString;
 use libc::{c_ulong, c_ulonglong, c_void};
 
-use super::error_type::ErrorType;
-use super::operation::Operation;
+use super::super::error_type::ErrorType;
+use super::super::operation::Operation;
 
 #[repr(C)]
 #[derive(Debug)]
-pub struct ResponseStore {
+pub struct Store {
     pub cookie: *mut c_void,
     pub key: *const c_void,
     pub nkey: c_ulong,
@@ -17,7 +17,7 @@ pub struct ResponseStore {
     pub operation: Operation
 }
 
-impl ResponseStore {
+impl Store {
     pub fn key(&self) -> String {
         unsafe {
             let res = CString::from_raw(self.key as *mut i8);

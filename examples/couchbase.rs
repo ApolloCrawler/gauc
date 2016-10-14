@@ -36,12 +36,12 @@ fn main() {
 
         let key = "foo";
         let ckey = CString::new(key).unwrap();
-        let mut gcmd = CmdGet::default();
+        let mut gcmd = cmd::Get::default();
         gcmd.key._type = KvBufferType::Copy;
         gcmd.key.contig.bytes = ckey.as_ptr() as *const libc::c_void;
         gcmd.key.contig.nbytes = key.len() as u64;
 
-        let res = lcb_get3(instance, std::ptr::null(), &gcmd as *const CmdGet);
+        let res = lcb_get3(instance, std::ptr::null(), &gcmd as *const cmd::Get);
         println!("Get Res: {:?}", res);
 
         let res = lcb_wait(instance);
@@ -51,11 +51,11 @@ fn main() {
     }
 }
 
-unsafe extern "C" fn op_callback(_instance: Instance, cbtype: CallbackType, resp: *const ResponseBase) {
+unsafe extern "C" fn op_callback(_instance: Instance, cbtype: CallbackType, resp: *const response::Base) {
     match cbtype {
         CallbackType::Get => {
             println!("> Get Callback!");
-            let gresp = resp as *const ResponseGet;
+            let gresp = resp as *const response::Get;
             println!(">> CAS: {}", (*gresp).cas);
 
             if (*gresp).value.is_null() == false {

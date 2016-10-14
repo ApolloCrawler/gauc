@@ -1,11 +1,11 @@
 use std::ffi::CString;
 use libc::{c_ulong, c_ulonglong, c_void};
 
-use super::error_type::ErrorType;
+use super::super::error_type::ErrorType;
 
 #[repr(C)]
 #[derive(Debug)]
-pub struct ResponseGet {
+pub struct Get {
     pub cookie: *mut c_void,
     pub key: *const c_void,
     pub nkey: c_ulong,
@@ -20,7 +20,7 @@ pub struct ResponseGet {
     pub itmflags: u32,
 }
 
-impl ResponseGet {
+impl Get {
     pub fn key(&self) -> String {
         unsafe {
             let res = CString::from_raw(self.key as *mut i8);

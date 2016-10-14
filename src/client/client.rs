@@ -72,10 +72,10 @@ impl Client {
     }
 
     pub fn get<F>(&mut self, key: &str, callback: F) -> &mut Client
-        where F: Fn(&ResponseGet)
+        where F: Fn(&response::Get)
     {
         let ckey = CString::new(key).unwrap();
-        let mut gcmd = CmdGet::default();
+        let mut gcmd = cmd::Get::default();
         gcmd.key._type = KvBufferType::Copy;
         gcmd.key.contig.bytes = ckey.as_ptr() as *const libc::c_void;
         gcmd.key.contig.nbytes = key.len() as u64;
@@ -83,13 +83,13 @@ impl Client {
         self.ops.total += 1;
 
         unsafe {
-            let boxed: Box<Fn(&ResponseGet)> = Box::new(|response: &ResponseGet| {
+            let boxed: Box<Fn(&response::Get)> = Box::new(|response: &response::Get| {
                 callback(response);
             });
 
             let user_data = &boxed as *const _ as *mut c_void;
 
-            let res = lcb_get3(self.instance, user_data, &gcmd as *const CmdGet);
+            let res = lcb_get3(self.instance, user_data, &gcmd as *const cmd::Get);
             if res != ErrorType::Success {
                 println!("lcb_get3() failed - {:?}", res);
             }
@@ -104,11 +104,11 @@ impl Client {
     }
 
     pub fn store<F>(&mut self, key: &str, value: &str, callback: F) -> &mut Client
-        where F: Fn(&ResponseStore)
+        where F: Fn(&response::Store)
     {
         let ckey = CString::new(key).unwrap();
         let cvalue = CString::new(value).unwrap();
-        let mut gcmd = CmdStore::default();
+        let mut gcmd = cmd::Store::default();
         gcmd.key._type = KvBufferType::Copy;
         gcmd.key.contig.bytes = ckey.as_ptr() as *const libc::c_void;
         gcmd.key.contig.nbytes = key.len() as u64;
@@ -119,13 +119,13 @@ impl Client {
         self.ops.total += 1;
 
         unsafe {
-            let boxed: Box<Fn(&ResponseStore)> = Box::new(|res: &ResponseStore| {
+            let boxed: Box<Fn(&response::Store)> = Box::new(|res: &response::Store| {
                 callback(res);
             });
 
             let user_data = &boxed as *const _ as *mut c_void;
 
-            let res = lcb_store3(self.instance, user_data, &gcmd as *const CmdStore);
+            let res = lcb_store3(self.instance, user_data, &gcmd as *const cmd::Store);
             if res != ErrorType::Success {
                 println!("lcb_get3() failed - {:?}", res);
             }
@@ -178,19 +178,19 @@ impl Drop for Client {
     }
 }
 
-unsafe extern "C" fn op_callback(_instance: Instance, cbtype: CallbackType, resp: *const ResponseBase) {
+unsafe extern "C" fn op_callback(_instance: Instance, cbtype: CallbackType, resp: *const response::Base) {
     match cbtype {
         CallbackType::Get => {
-            let gresp = resp as *const ResponseGet;
+            let gresp = resp as *const response::Get;
             let cookie = (*gresp).cookie;
-            let callback = cookie as *const Box<Fn(&ResponseGet)>;
+            let callback = cookie as *const Box<Fn(&response::Get)>;
             (*callback)(&(*gresp));
         },
         CallbackType::Store => {
-            let gresp = resp as *const ResponseStore;
+            let gresp = resp as *const response::Store;
 
             let cookie = (*gresp).cookie;
-            let callback = cookie as *const Box<Fn(&ResponseStore)>;
+            let callback = cookie as *const Box<Fn(&response::Store)>;
             (*callback)(&(*gresp));
         },
         _ => error!("! Unknown Callback...")

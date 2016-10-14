@@ -1,10 +1,10 @@
-use super::key_buffer::KeyBuffer;
+use super::super::key_buffer::KeyBuffer;
 
-use super::operation::Operation;
+use super::super::operation::Operation;
 
 #[repr(C)]
 #[derive(Debug)]
-pub struct CmdStore {
+pub struct Store {
     pub cmdflags: u32,
     pub exptime: u32,
     pub cas: u64,
@@ -32,7 +32,7 @@ pub struct CmdStore {
     pub operation: Operation,
 }
 
-impl Default for CmdStore {
+impl Default for Store {
     fn default() -> Self {
         unsafe { ::std::mem::zeroed() }
     }

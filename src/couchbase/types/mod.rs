@@ -1,7 +1,5 @@
 pub mod callback_type;
-pub mod cmd_base;
-pub mod cmd_get;
-pub mod cmd_store;
+pub mod cmd;
 pub mod contiguous_buffer;
 pub mod create_st;
 pub mod create_st3;
@@ -11,15 +9,9 @@ pub mod instance;
 pub mod key_buffer;
 pub mod kv_buffer_type;
 pub mod operation;
-pub mod response_base;
-pub mod response_flags;
-pub mod response_get;
-pub mod response_store;
+pub mod response;
 
 pub use self::callback_type::CallbackType;
-pub use self::cmd_base::CmdBase;
-pub use self::cmd_get::CmdGet;
-pub use self::cmd_store::CmdStore;
 pub use self::contiguous_buffer::ContiguousBuffer;
 pub use self::create_st::CreateSt;
 pub use self::create_st3::CreateSt3;
@@ -29,8 +21,3 @@ pub use self::instance::Instance;
 pub use self::key_buffer::KeyBuffer;
 pub use self::kv_buffer_type::KvBufferType;
 pub use self::operation::Operation;
-pub use self::response_base::ResponseBase;
-pub use self::response_flags::ResponseFlags;
-pub use self::response_get::ResponseGet;
-pub use self::response_store::ResponseStore;
-

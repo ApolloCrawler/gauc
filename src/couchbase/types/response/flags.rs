@@ -1,6 +1,6 @@
 #[repr(u32)]
 #[derive(Debug,Clone,Copy)]
-pub enum ResponseFlags {
+pub enum Flags {
     Final = 1,
     Clientgen = 2,
     Nmvgen = 4,
