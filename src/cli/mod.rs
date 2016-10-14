@@ -10,17 +10,36 @@ use super::client::Client;
 pub fn main(_args: &clap::ArgMatches) {
     env_logger::init().unwrap();
 
-    let client = Client::new("couchbase://localhost/default");
+    let mut client = Client::new("couchbase://localhost/default");
 
-    let process_command = |cmd: &str| {
-        match cmd {
+    let mut process_command = |cmd: &str| {
+        let parts: Vec<&str> = cmd.split(' ').collect();
+        match parts[0] {
             "exit" | "quit" => {
                 process::exit(0);
             },
             "get" => {
+                match parts.len() {
+                    2 => {
+                        client.get(parts[1], |res| {
+                            println!("{}", res.value());
+                        });
+                    },
+                    _ => println!("Wrong number of arguments, expect exactly one argument.")
+                }
             },
             "info" => {
                 println!("{:?}", client);
+            },
+            "store" => {
+                match parts.len() {
+                    1 | 2 => println!("Wrong number of arguments, expected key and value"),
+                    _ => {
+                        client.store(parts[1], &format!("{}", parts[2..].join(" "))[..], |res| {
+                            println!("{:?}", res);
+                        });
+                    }
+                }
             },
             "" => {
             },
@@ -30,7 +49,7 @@ pub fn main(_args: &clap::ArgMatches) {
         }
     };
 
-    let process_line = || {
+    let mut process_line = || {
         print!("gauc> ");
         let _ = io::stdout().flush();
         let mut input = String::new();
