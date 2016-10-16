@@ -128,17 +128,20 @@ foo - {"msg": "This is test!"}
 
 ```
 $ ./target/debug/gauc -h
-Couchbase Rust Adapter / CLI 0.1.0
+Couchbase Rust Adapter / CLI 0.1.5
 Tomas Korcak <korczis@gmail.com>
 
 USAGE:
-    gauc [FLAGS]
+    gauc [FLAGS] [OPTIONS]
 
 FLAGS:
     -h, --help           Prints help information
     -i, --interactive    Interactive mode
     -V, --version        Prints version information
     -v, --verbose        Verbose mode
+
+OPTIONS:
+    -u, --url <url>    URL - connection string [default: couchbase://localhost/default]
 ```
 
 ## License
