@@ -18,7 +18,7 @@ fn it_gets_fails_when_getting_nonexisting_document() {
     // Get data
     client.get("non-existing-key", |res| {
         if let Err(response) = res {
-            assert!(res.to_string() == "The key does not exist on the server");
+            assert!(response.to_string() == "The key does not exist on the server");
         }
     });
 }
