@@ -9,9 +9,9 @@ This project was originaly inspired by [couchbase-rs](https://github.com/daschl/
 ## Status
 
 [![Build Status](https://travis-ci.org/korczis/gauc.svg?branch=master)](https://travis-ci.org/korczis/gauc)
-[![Crates.io](https://img.shields.io/crates/v/gauc.svg)](gauc)
-[![Crates.io](https://img.shields.io/crates/d/gauc.svg)](gauc)
-[![Crates.io](https://img.shields.io/crates/dv/gauc.svg)](gauc)
+[![Crates.io](https://img.shields.io/crates/v/gauc.svg)](https://github.com/korczis/gauc)
+[![Crates.io](https://img.shields.io/crates/d/gauc.svg)](https://github.com/korczis/gauc)
+[![Crates.io](https://img.shields.io/crates/dv/gauc.svg)](https://github.com/korczis/gauc)
 
 ## Prerequisites
 
