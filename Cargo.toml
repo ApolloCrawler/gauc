@@ -3,6 +3,8 @@ name = "gauc"
 version = "0.1.0"
 authors = ["Tomas Korcak <korczis@gmail.com>"]
 
+description = "Couchbase Rust Adapter / CLI"
+
 # These URLs point to more information about the repository.
 documentation = "https://github.com/korczis/gauc"
 homepage = "https://github.com/korczis/gauc"
