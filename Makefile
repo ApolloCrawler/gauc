@@ -17,7 +17,7 @@ endif
 rwildcard=$(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2) \
   $(filter $(subst *,%,$2),$d))
 
-all: build test strip upx stats size deps doc dot
+all: build test strip stats size deps upx doc dot
 
 install_deps:
 		cargo install cargo-count
