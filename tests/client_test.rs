@@ -2,6 +2,7 @@ extern crate gauc;
 
 use gauc::client::*;
 use gauc::couchbase::types::error_type::ErrorType;
+use gauc::couchbase::types::operation::Operation;
 
 const DEFAULT_CONNECTION_STRING: &'static str = "couchbase://localhost/default";
 
@@ -29,7 +30,7 @@ fn it_stores_document() {
     let mut client = Client::new(DEFAULT_CONNECTION_STRING);
 
     // Store some data
-    client.store("foo", "{\"msg\": \"This is test!\"}", |res| {
+    client.store("foo", "{\"msg\": \"This is test!\"}", Operation::Upsert, |res| {
         if let Ok(response) = res {
             assert!(response.rc == ErrorType::Success);
             println!("Created new document, CAS: {}", response.cas)

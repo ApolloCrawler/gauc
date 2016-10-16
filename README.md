@@ -22,8 +22,14 @@ This project was originaly inspired by [couchbase-rs](https://github.com/daschl/
 
 ### High Level Client Functions
 
+- add
+- append
 - get
+- prepend
+- replace
+- set
 - store
+- upsert
 
 ### Wrapped functions
 

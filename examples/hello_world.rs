@@ -6,7 +6,7 @@ fn main() {
     let mut client = Client::new("couchbase://localhost/default");
 
     // Store some data
-    client.store("foo", "{\"msg\": \"This is test!\"}", |res| {
+    client.upsert("foo", "{\"msg\": \"This is test!\"}", |res| {
         if let Ok(response) = res {
             println!("Created new document, CAS: {}", response.cas)
         }

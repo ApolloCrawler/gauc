@@ -11,7 +11,9 @@ use super::super::couchbase::types::response::format_error;
 
 #[derive(Debug)]
 pub struct ClientOps {
-    pub total: usize
+    pub total: usize,
+    pub success: usize,
+    pub fail: usize
 }
 
 #[derive(Debug)]
@@ -63,7 +65,9 @@ impl Client {
             lcb_install_callback3(instance, CallbackType::Store, Some(op_callback));
 
             let ops = ClientOps {
-                total: 0
+                total: 0,
+                success: 0,
+                fail: 0
             };
 
             Client {
@@ -75,12 +79,27 @@ impl Client {
         }
     }
 
+    ///  Will cause the operation to fail if the key already exists in the cluster.
+    pub fn add<F>(&mut self, key: &str, value: &str, callback: F) -> &mut Client
+        where F: Fn(Result<&response::Store, (Option<&response::Store>, &'static str)>)
+    {
+        return self.store(key, value, Operation::Add, callback);
+    }
+
+    /// Rather than setting the contents of the entire document, take the value specified in value and _append_ it to the existing bytes in the value.
+    pub fn append<F>(&mut self, key: &str, value: &str, callback: F) -> &mut Client
+        where F: Fn(Result<&response::Store, (Option<&response::Store>, &'static str)>)
+    {
+        return self.store(key, value, Operation::Append, callback);
+    }
+
     /// Get document from database
     pub fn get<F>(&mut self, key: &str, callback: F) -> &mut Client
         where F: Fn(Result<&response::Get, (Option<&response::Get>, &'static str)>)
     {
         let ckey = CString::new(key).unwrap();
         let mut gcmd = cmd::Get::default();
+
         gcmd.key._type = KvBufferType::Copy;
         gcmd.key.contig.bytes = ckey.as_ptr() as *const libc::c_void;
         gcmd.key.contig.nbytes = key.len() as u64;
@@ -92,7 +111,7 @@ impl Client {
                 match response.rc {
                     ErrorType::Success => callback(Ok(response)),
                     _ => {
-                        callback(Err((Some(response), response.error(self.instance))))
+                        callback(Err((Some(response), response.error(self.instance))));
                     }
                 }
             });
@@ -101,24 +120,46 @@ impl Client {
 
             let res = lcb_get3(self.instance, user_data, &gcmd as *const cmd::Get);
             if res != ErrorType::Success {
-                callback(Err((None, format_error(self.instance, &res))))
-            }
-
-            let res = lcb_wait(self.instance);
-            if res != ErrorType::Success {
-                callback(Err((None, format_error(self.instance, &res))))
+                callback(Err((None, format_error(self.instance, &res))));
+            } else {
+                let res = lcb_wait(self.instance);
+                if res != ErrorType::Success {
+                    callback(Err((None, format_error(self.instance, &res))))
+                }
             }
         }
 
         return self;
     }
 
+    /// Like append, but prepends the new value to the existing value.
+    pub fn prepend<F>(&mut self, key: &str, value: &str, callback: F) -> &mut Client
+        where F: Fn(Result<&response::Store, (Option<&response::Store>, &'static str)>)
+    {
+        return self.store(key, value, Operation::Prepend, callback);
+    }
+
+    /// Will cause the operation to fail _unless_ the key already exists in the cluster.
+    pub fn replace<F>(&mut self, key: &str, value: &str, callback: F) -> &mut Client
+        where F: Fn(Result<&response::Store, (Option<&response::Store>, &'static str)>)
+    {
+        return self.store(key, value, Operation::Replace, callback);
+    }
+
+    /// Unconditionally store the item in the cluster
+    pub fn set<F>(&mut self, key: &str, value: &str, callback: F) -> &mut Client
+        where F: Fn(Result<&response::Store, (Option<&response::Store>, &'static str)>)
+    {
+        return self.store(key, value, Operation::Replace, callback);
+    }
+
     /// Store document in database
-    pub fn store<F>(&mut self, key: &str, value: &str, callback: F) -> &mut Client
+    pub fn store<F>(&mut self, key: &str, value: &str, operation: Operation, callback: F) -> &mut Client
         where F: Fn(Result<&response::Store, (Option<&response::Store>, &'static str)>)
     {
         let ckey = CString::new(key).unwrap();
         let cvalue = CString::new(value).unwrap();
+
         let mut gcmd = cmd::Store::default();
         gcmd.key._type = KvBufferType::Copy;
         gcmd.key.contig.bytes = ckey.as_ptr() as *const libc::c_void;
@@ -126,6 +167,7 @@ impl Client {
         gcmd.value._type = KvBufferType::Copy;
         gcmd.value.contig.bytes = cvalue.as_ptr() as *const libc::c_void;
         gcmd.value.contig.nbytes = value.len() as u64;
+        gcmd.operation = operation;
 
         self.ops.total += 1;
 
@@ -134,7 +176,7 @@ impl Client {
                 match response.rc {
                     ErrorType::Success => callback(Ok(response)),
                     _ => {
-                        callback(Err((Some(response), response.error(self.instance))))
+                        callback(Err((Some(response), response.error(self.instance))));
                     }
                 }
             });
@@ -144,15 +186,22 @@ impl Client {
             let res = lcb_store3(self.instance, user_data, &gcmd as *const cmd::Store);
             if res != ErrorType::Success {
                 callback(Err((None, format_error(self.instance, &res))))
-            }
-
-            let res = lcb_wait(self.instance);
-            if res != ErrorType::Success {
-                callback(Err((None, format_error(self.instance, &res))))
+            } else {
+                let res = lcb_wait(self.instance);
+                if res != ErrorType::Success {
+                    callback(Err((None, format_error(self.instance, &res))))
+                }
             }
         }
 
         return self;
+    }
+
+    /// Behaviorally it is identical to set in that it will make the server unconditionally store the item, whether it exists or not.
+    pub fn upsert<F>(&mut self, key: &str, value: &str, callback: F) -> &mut Client
+        where F: Fn(Result<&response::Store, (Option<&response::Store>, &'static str)>)
+    {
+        return self.store(key, value, Operation::Upsert, callback);
     }
 
     /// Get count of finished commands
