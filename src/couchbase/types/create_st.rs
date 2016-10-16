@@ -17,3 +17,9 @@ impl Default for CreateSt {
         }
     }
 }
+
+impl CreateSt {
+    pub fn version(&self) -> c_int {
+        return self.version;
+    }
+}

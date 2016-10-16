@@ -214,3 +214,9 @@ unsafe extern "C" fn op_callback(_instance: Instance, cbtype: CallbackType, resp
 fn it_works() {
     assert!(1 == 1);
 }
+
+#[test]
+fn it_connects() {
+    let client = Client::new("couchbase://localhost/default");
+    assert!(client.opts.version() == 3);
+}
