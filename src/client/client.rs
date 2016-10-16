@@ -21,6 +21,7 @@ pub struct Client {
 }
 
 impl Client {
+    /// Constructor
     pub fn new(uri: &str) -> Client {
         let connstr = CString::new(uri).unwrap();
 
@@ -72,6 +73,7 @@ impl Client {
         }
     }
 
+    /// Get document from database
     pub fn get<F>(&mut self, key: &str, callback: F) -> &mut Client
         where F: Fn(Result<&response::Get, &'static str>)
     {
@@ -109,6 +111,7 @@ impl Client {
         return self;
     }
 
+    /// Store document in database
     pub fn store<F>(&mut self, key: &str, value: &str, callback: F) -> &mut Client
         where F: Fn(Result<&response::Store, &'static str>)
     {
@@ -150,14 +153,17 @@ impl Client {
         return self;
     }
 
+    /// Get count of finished commands
     pub fn ops_unfinished_count(&self) -> usize {
         return self.ops.total;
     }
 
+    /// Get count of finished commands
     pub fn ops_finished(&mut self) -> bool {
         return self.ops_unfinished_count() == 0;
     }
 
+    /// Wait for pending commands to finish
     pub fn wait(&mut self) {
          let interval = time::Duration::from_millis(100);
          while self.ops_finished() == false {
@@ -165,6 +171,7 @@ impl Client {
          }
     }
 
+    /// Wait for pending commands to finish for max_msec
     pub fn wait_max(&mut self, max_msec: usize) {
         let mut t = 0 as usize;
         let interval = time::Duration::from_millis(100);
@@ -189,6 +196,7 @@ impl Drop for Client {
     }
 }
 
+/// libcouchbse callback
 unsafe extern "C" fn op_callback(_instance: Instance, cbtype: CallbackType, resp: *const response::Base) {
     match cbtype {
         CallbackType::Get => {
