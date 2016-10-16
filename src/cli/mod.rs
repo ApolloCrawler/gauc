@@ -22,7 +22,10 @@ pub fn cmd_get(client: &mut Client, parts: &Vec<&str>) -> bool {
             client.get(parts[1], |res| {
                 match res {
                     Ok(response) => println!("{}", response.value().unwrap()),
-                    Err(e) => println!("{}", e)
+                    Err(e) => {
+                        let (_response, error) = e;
+                        println!("{}", error);
+                    }
                 }
 
             });
@@ -46,7 +49,10 @@ pub fn cmd_store(client: &mut Client, parts: &Vec<&str>) -> bool {
             client.store(parts[1], &format!("{}", parts[2..].join(" "))[..], |res| {
                 match res {
                     Ok(response) => println!("{:?}", response),
-                    Err(e) => println!("{}", e)
+                    Err(e) => {
+                        let (_response, error) = e;
+                        println!("{}", error);
+                    }
                 }
             });
         }

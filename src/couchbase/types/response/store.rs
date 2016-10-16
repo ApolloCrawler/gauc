@@ -3,6 +3,9 @@ use libc::{c_ulong, c_ulonglong, c_void};
 
 use super::super::error_type::ErrorType;
 use super::super::operation::Operation;
+use super::super::instance::Instance;
+
+use super::format_error;
 
 #[repr(C)]
 #[derive(Debug)]
@@ -33,5 +36,9 @@ impl Store {
                 }
             }
         }
+    }
+
+    pub fn error(&self, instance: Instance) -> &'static str {
+        return format_error(instance, &self.rc);
     }
 }

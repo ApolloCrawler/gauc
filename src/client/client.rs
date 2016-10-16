@@ -7,6 +7,8 @@ use std::{process, ptr, thread, time};
 
 use super::super::couchbase::*;
 
+use super::super::couchbase::types::response::format_error;
+
 #[derive(Debug)]
 pub struct ClientOps {
     pub total: usize
@@ -75,7 +77,7 @@ impl Client {
 
     /// Get document from database
     pub fn get<F>(&mut self, key: &str, callback: F) -> &mut Client
-        where F: Fn(Result<&response::Get, &'static str>)
+        where F: Fn(Result<&response::Get, (Option<&response::Get>, &'static str)>)
     {
         let ckey = CString::new(key).unwrap();
         let mut gcmd = cmd::Get::default();
@@ -90,7 +92,7 @@ impl Client {
                 match response.rc {
                     ErrorType::Success => callback(Ok(response)),
                     _ => {
-                        callback(Err(CStr::from_ptr(lcb_strerror(self.instance, response.rc)).to_str().unwrap()))
+                        callback(Err((Some(response), response.error(self.instance))))
                     }
                 }
             });
@@ -99,12 +101,12 @@ impl Client {
 
             let res = lcb_get3(self.instance, user_data, &gcmd as *const cmd::Get);
             if res != ErrorType::Success {
-                println!("lcb_get3() failed - {:?}", res);
+                callback(Err((None, format_error(self.instance, &res))))
             }
 
             let res = lcb_wait(self.instance);
             if res != ErrorType::Success {
-                println!("lcb_wait() failed - {:?}", res);
+                callback(Err((None, format_error(self.instance, &res))))
             }
         }
 
@@ -113,7 +115,7 @@ impl Client {
 
     /// Store document in database
     pub fn store<F>(&mut self, key: &str, value: &str, callback: F) -> &mut Client
-        where F: Fn(Result<&response::Store, &'static str>)
+        where F: Fn(Result<&response::Store, (Option<&response::Store>, &'static str)>)
     {
         let ckey = CString::new(key).unwrap();
         let cvalue = CString::new(value).unwrap();
@@ -132,7 +134,7 @@ impl Client {
                 match response.rc {
                     ErrorType::Success => callback(Ok(response)),
                     _ => {
-                        callback(Err(CStr::from_ptr(lcb_strerror(self.instance, response.rc)).to_str().unwrap()))
+                        callback(Err((Some(response), response.error(self.instance))))
                     }
                 }
             });
@@ -141,12 +143,12 @@ impl Client {
 
             let res = lcb_store3(self.instance, user_data, &gcmd as *const cmd::Store);
             if res != ErrorType::Success {
-                println!("lcb_get3() failed - {:?}", res);
+                callback(Err((None, format_error(self.instance, &res))))
             }
 
             let res = lcb_wait(self.instance);
             if res != ErrorType::Success {
-                println!("lcb_wait() failed - {:?}", res);
+                callback(Err((None, format_error(self.instance, &res))))
             }
         }
 
