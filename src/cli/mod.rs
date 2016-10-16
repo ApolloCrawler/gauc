@@ -6,20 +6,38 @@ use std::io::prelude::*;
 use super::client::Client;
 use super::couchbase::types::operation::Operation;
 
+use super::couchbase::types::response::Get;
+use super::couchbase::types::response::Store;
+
+/// Callback handling get operation
+fn get_callback(result: Result<&Get, (Option<&Get>, &'static str)>) {
+    match result {
+        Ok(response) => println!("{}", response.value().unwrap()),
+        Err(e) => {
+            let (_response, error) = e;
+            println!("{}", error);
+        }
+    }
+
+}
+
+/// Callback handling store operation
+fn store_callback(result: Result<&Store, (Option<&Store>, &'static str)>) {
+    match result {
+        Ok(response) => println!("{:?}", response),
+        Err(e) => {
+            let (_response, error) = e;
+            println!("{}", error);
+        }
+    }
+}
+
 /// Handle "add" command
 pub fn cmd_add(client: &mut Client, parts: &Vec<&str>) -> bool {
     match parts.len() {
         1 | 2 => println!("Wrong number of arguments, expected key and value"),
         _ => {
-            client.add(parts[1], &format!("{}", parts[2..].join(" "))[..], |res| {
-                match res {
-                    Ok(response) => println!("{:?}", response),
-                    Err(e) => {
-                        let (_response, error) = e;
-                        println!("{}", error);
-                    }
-                }
-            });
+            client.add(parts[1], &format!("{}", parts[2..].join(" "))[..], store_callback);
         }
     }
     return true;
@@ -30,15 +48,7 @@ pub fn cmd_append(client: &mut Client, parts: &Vec<&str>) -> bool {
     match parts.len() {
         1 | 2 => println!("Wrong number of arguments, expected key and value"),
         _ => {
-            client.append(parts[1], &format!("{}", parts[2..].join(" "))[..], |res| {
-                match res {
-                    Ok(response) => println!("{:?}", response),
-                    Err(e) => {
-                        let (_response, error) = e;
-                        println!("{}", error);
-                    }
-                }
-            });
+            client.append(parts[1], &format!("{}", parts[2..].join(" "))[..], store_callback);
         }
     }
     return true;
@@ -58,16 +68,7 @@ pub fn cmd_exit() -> bool {
 pub fn cmd_get(client: &mut Client, parts: &Vec<&str>) -> bool {
     match parts.len() {
         2 => {
-            client.get(parts[1], |res| {
-                match res {
-                    Ok(response) => println!("{}", response.value().unwrap()),
-                    Err(e) => {
-                        let (_response, error) = e;
-                        println!("{}", error);
-                    }
-                }
-
-            });
+            client.get(parts[1], get_callback);
         },
         _ => println!("Wrong number of arguments, expect exactly one argument.")
     }
@@ -85,15 +86,7 @@ pub fn cmd_prepend(client: &mut Client, parts: &Vec<&str>) -> bool {
     match parts.len() {
         1 | 2 => println!("Wrong number of arguments, expected key and value"),
         _ => {
-            client.prepend(parts[1], &format!("{}", parts[2..].join(" "))[..], |res| {
-                match res {
-                    Ok(response) => println!("{:?}", response),
-                    Err(e) => {
-                        let (_response, error) = e;
-                        println!("{}", error);
-                    }
-                }
-            });
+            client.prepend(parts[1], &format!("{}", parts[2..].join(" "))[..], store_callback);
         }
     }
     return true;
@@ -104,15 +97,7 @@ pub fn cmd_replace(client: &mut Client, parts: &Vec<&str>) -> bool {
     match parts.len() {
         1 | 2 => println!("Wrong number of arguments, expected key and value"),
         _ => {
-            client.replace(parts[1], &format!("{}", parts[2..].join(" "))[..], |res| {
-                match res {
-                    Ok(response) => println!("{:?}", response),
-                    Err(e) => {
-                        let (_response, error) = e;
-                        println!("{}", error);
-                    }
-                }
-            });
+            client.replace(parts[1], &format!("{}", parts[2..].join(" "))[..], store_callback);
         }
     }
     return true;
@@ -123,15 +108,7 @@ pub fn cmd_set(client: &mut Client, parts: &Vec<&str>) -> bool {
     match parts.len() {
         1 | 2 => println!("Wrong number of arguments, expected key and value"),
         _ => {
-            client.set(parts[1], &format!("{}", parts[2..].join(" "))[..], |res| {
-                match res {
-                    Ok(response) => println!("{:?}", response),
-                    Err(e) => {
-                        let (_response, error) = e;
-                        println!("{}", error);
-                    }
-                }
-            });
+            client.set(parts[1], &format!("{}", parts[2..].join(" "))[..], store_callback);
         }
     }
     return true;
@@ -142,15 +119,7 @@ pub fn cmd_store(client: &mut Client, parts: &Vec<&str>) -> bool {
     match parts.len() {
         1 | 2 => println!("Wrong number of arguments, expected key and value"),
         _ => {
-            client.store(parts[1], &format!("{}", parts[2..].join(" "))[..], Operation::Upsert, |res| {
-                match res {
-                    Ok(response) => println!("{:?}", response),
-                    Err(e) => {
-                        let (_response, error) = e;
-                        println!("{}", error);
-                    }
-                }
-            });
+            client.store(parts[1], &format!("{}", parts[2..].join(" "))[..], Operation::Upsert, store_callback);
         }
     }
     return true;
@@ -161,15 +130,7 @@ pub fn cmd_upsert(client: &mut Client, parts: &Vec<&str>) -> bool {
     match parts.len() {
         1 | 2 => println!("Wrong number of arguments, expected key and value"),
         _ => {
-            client.upsert(parts[1], &format!("{}", parts[2..].join(" "))[..], |res| {
-                match res {
-                    Ok(response) => println!("{:?}", response),
-                    Err(e) => {
-                        let (_response, error) = e;
-                        println!("{}", error);
-                    }
-                }
-            });
+            client.upsert(parts[1], &format!("{}", parts[2..].join(" "))[..], store_callback);
         }
     }
     return true;
