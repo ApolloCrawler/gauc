@@ -182,13 +182,15 @@ unsafe extern "C" fn op_callback(_instance: Instance, cbtype: CallbackType, resp
     match cbtype {
         CallbackType::Get => {
             let gresp = resp as *const response::Get;
+            debug!("{:?}", *gresp);
+
             let cookie = (*gresp).cookie;
             let callback = cookie as *const Box<Fn(&response::Get)>;
-            println!("{:?}", *gresp);
             (*callback)(&(*gresp));
         },
         CallbackType::Store => {
             let gresp = resp as *const response::Store;
+            debug!("{:?}", *gresp);
 
             let cookie = (*gresp).cookie;
             let callback = cookie as *const Box<Fn(&response::Store)>;
