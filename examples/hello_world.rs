@@ -12,6 +12,8 @@ fn main() {
 
     // Get data
     client.get("foo", |response| {
-        println!("{} - {}", response.key(), response.value())
+        if let Some(value) = response.value() {
+            println!("{} - {}", response.key().unwrap(), value)
+        }
     });
 }

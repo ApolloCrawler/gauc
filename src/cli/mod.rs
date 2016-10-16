@@ -22,7 +22,11 @@ pub fn main(_args: &clap::ArgMatches) {
                 match parts.len() {
                     2 => {
                         client.get(parts[1], |res| {
-                            println!("{}", res.value());
+                            match res.value() {
+                                Some(value) => println!("{}", value),
+                                _ => {}
+                            }
+
                         });
                     },
                     _ => println!("Wrong number of arguments, expect exactly one argument.")

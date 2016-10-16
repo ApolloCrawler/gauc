@@ -18,13 +18,20 @@ pub struct Store {
 }
 
 impl Store {
-    pub fn key(&self) -> String {
+    pub fn key(&self) -> Option<String> {
         unsafe {
-            let res = CString::from_raw(self.key as *mut i8);
-            let length = self.nkey as usize;
+            match self.rc {
+                ErrorType::Success => {
+                    let res = CString::from_raw(self.key as *mut i8);
+                    let length = self.nkey as usize;
 
-            let text = &res.into_string().unwrap()[..length];
-            return text.to_string();
+                    let text = &res.into_string().unwrap()[..length];
+                    return Some(text.to_string());
+                },
+                _ => {
+                    return None;
+                }
+            }
         }
     }
 }
