@@ -72,7 +72,7 @@ impl Client {
     }
 
     pub fn get<F>(&mut self, key: &str, callback: F) -> &mut Client
-        where F: Fn(&response::Get)
+        where F: Fn(Result<&response::Get, &'static str>)
     {
         let ckey = CString::new(key).unwrap();
         let mut gcmd = cmd::Get::default();
@@ -84,7 +84,12 @@ impl Client {
 
         unsafe {
             let boxed: Box<Fn(&response::Get)> = Box::new(|response: &response::Get| {
-                callback(response);
+                match response.rc {
+                    ErrorType::Success => callback(Ok(response)),
+                    _ => {
+                        callback(Err(CStr::from_ptr(lcb_strerror(self.instance, response.rc)).to_str().unwrap()))
+                    }
+                }
             });
 
             let user_data = &boxed as *const _ as *mut c_void;
@@ -104,7 +109,7 @@ impl Client {
     }
 
     pub fn store<F>(&mut self, key: &str, value: &str, callback: F) -> &mut Client
-        where F: Fn(&response::Store)
+        where F: Fn(Result<&response::Store, &'static str>)
     {
         let ckey = CString::new(key).unwrap();
         let cvalue = CString::new(value).unwrap();
@@ -119,8 +124,13 @@ impl Client {
         self.ops.total += 1;
 
         unsafe {
-            let boxed: Box<Fn(&response::Store)> = Box::new(|res: &response::Store| {
-                callback(res);
+            let boxed: Box<Fn(&response::Store)> = Box::new(|response: &response::Store| {
+                match response.rc {
+                    ErrorType::Success => callback(Ok(response)),
+                    _ => {
+                        callback(Err(CStr::from_ptr(lcb_strerror(self.instance, response.rc)).to_str().unwrap()))
+                    }
+                }
             });
 
             let user_data = &boxed as *const _ as *mut c_void;

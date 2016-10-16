@@ -22,9 +22,9 @@ pub fn main(_args: &clap::ArgMatches) {
                 match parts.len() {
                     2 => {
                         client.get(parts[1], |res| {
-                            match res.value() {
-                                Some(value) => println!("{}", value),
-                                _ => {}
+                            match res {
+                                Ok(response) => println!("{}", response.value().unwrap()),
+                                Err(e) => println!("{}", e)
                             }
 
                         });
@@ -40,7 +40,10 @@ pub fn main(_args: &clap::ArgMatches) {
                     1 | 2 => println!("Wrong number of arguments, expected key and value"),
                     _ => {
                         client.store(parts[1], &format!("{}", parts[2..].join(" "))[..], |res| {
-                            println!("{:?}", res);
+                            match res {
+                                Ok(response) => println!("{:?}", response),
+                                Err(e) => println!("{}", e)
+                            }
                         });
                     }
                 }

@@ -96,14 +96,16 @@ fn main() {
     let mut client = Client::new("couchbase://localhost/default");
 
     // Store some data
-    client.store("foo", "{\"msg\": \"This is test!\"}", |response| {
-        println!("Created new document, CAS: {}", response.cas)
+    client.store("foo", "{\"msg\": \"This is test!\"}", |res| {
+        if let Ok(response) = res {
+            println!("Created new document, CAS: {}", response.cas)
+        }
     });
 
     // Get data
-    client.get("foo", |response| {
-        if let Some(value) = response.value() {
-            println!("{} - {}", response.key().unwrap(), value)
+    client.get("foo", |res| {
+        if let Ok(response) = res {
+            println!("{} - {}", response.key().unwrap(), response.value().unwrap())
         }
     });
 }
@@ -113,10 +115,8 @@ fn main() {
 
 ```
 $ ./target/debug/examples/hello_world
-Connecting to couchbase://localhost/default
-Created new document, CAS: 1476374707351322624
+Created new document, CAS: 1476585187967238144
 foo - {"msg": "This is test!"}
-Disconnecting from couchbase://localhost/default
 ```
 
 ## Usage
