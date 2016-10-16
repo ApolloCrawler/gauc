@@ -3,7 +3,7 @@ extern crate libc;
 use libc::{c_void};
 use std::ffi::CStr;
 use std::ffi::CString;
-use std::{ptr, thread, time};
+use std::{process, ptr, thread, time};
 
 use super::super::couchbase::*;
 
@@ -53,6 +53,7 @@ impl Client {
                          res,
                          CStr::from_ptr(lcb_strerror(instance, res)).to_str().unwrap()
                 );
+                process::exit(-1);
             }
 
             lcb_install_callback3(instance, CallbackType::Get, Some(op_callback));

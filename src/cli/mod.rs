@@ -1,22 +1,18 @@
 extern crate clap;
-extern crate env_logger;
 
 use std::io;
 use std::io::prelude::*;
-use std::process;
 
 use super::client::Client;
 
-pub fn main(_args: &clap::ArgMatches) {
-    env_logger::init().unwrap();
+pub fn main(args: &clap::ArgMatches) {
+    let mut client = Client::new(args.value_of("url").unwrap());
 
-    let mut client = Client::new("couchbase://localhost/default");
-
-    let mut process_command = |cmd: &str| {
+    let mut process_command = |cmd: &str| -> bool {
         let parts: Vec<&str> = cmd.split(' ').collect();
         match parts[0] {
             "exit" | "quit" => {
-                process::exit(0);
+                return false;
             },
             "get" => {
                 match parts.len() {
@@ -31,9 +27,11 @@ pub fn main(_args: &clap::ArgMatches) {
                     },
                     _ => println!("Wrong number of arguments, expect exactly one argument.")
                 }
+                return true;
             },
             "info" => {
                 println!("{:?}", client);
+                return true;
             },
             "store" => {
                 match parts.len() {
@@ -47,26 +45,30 @@ pub fn main(_args: &clap::ArgMatches) {
                         });
                     }
                 }
+                return true;
             },
             "" => {
+                return true;
             },
             _ => {
                 println!("Unknown command \"{}\"", cmd);
+                return true;
             }
         }
     };
 
-    let mut process_line = || {
+    let mut process_line = || -> bool {
         print!("gauc> ");
         let _ = io::stdout().flush();
         let mut input = String::new();
         match io::stdin().read_line(&mut input) {
             Ok(_) => {
-                process_command(&input.trim());
+                return process_command(&input.trim());
             }
-            _ => {}
+            _ => {
+                return false;
+            }
         }
-        return true;
     };
 
     while process_line() {}

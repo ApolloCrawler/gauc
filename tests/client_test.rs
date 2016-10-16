@@ -12,6 +12,18 @@ fn it_connects() {
 }
 
 #[test]
+fn it_gets_fails_when_getting_nonexisting_document() {
+    let mut client = Client::new(DEFAULT_CONNECTION_STRING);
+
+    // Get data
+    client.get("non-existing-key", |res| {
+        if let Err(response) = res {
+            assert!(res.to_string() == "The key does not exist on the server");
+        }
+    });
+}
+
+#[test]
 fn it_stores_document() {
     let mut client = Client::new(DEFAULT_CONNECTION_STRING);
 
