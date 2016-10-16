@@ -33,11 +33,12 @@ before_install:
   - ./.travis/install.sh
   - wget http://packages.couchbase.com/releases/4.1.0/couchbase-server-community_4.1.0-ubuntu12.04_amd64.deb
   - sudo dpkg -i couchbase-server-community_4.1.0-ubuntu12.04_amd64.deb
+  - sleep 30
   - "curl -u Administrator:Administrator -v -X POST http://localhost:8091/node/controller/setupServices -d 'services=kv%2Cn1ql%2Cindex'"
   - "curl -v -X POST http://localhost:8091/nodes/self/controller/settings -d 'path=%2Fopt%2Fcouchbase%2Fvar%2Flib%2Fcouchbase%2Fdata&index_path=%2Fopt%2Fcouchbase%2Fvar%2Flib%2Fcouchbase%2Fdata'"
   - "curl -v -X POST http://localhost:8091/settings/web -d 'password=Administrator&username=Administrator&port=SAME'"
   - "curl -u Administrator:Administrator -v -X POST http://localhost:8091/pools/default/buckets -d 'flushEnabled=1&threadsNumber=3&replicaIndex=0&replicaNumber=0&evictionPolicy=valueOnly&ramQuotaMB=597&bucketType=couchbase&name=default&authType=sasl&saslPassword='"
-  - "curl -u Administrator:Administrator -X POST http://localhost:8091/pools/default -d 'memoryQuota=2048' -d 'indexMemoryQuota=269'"
+  - "curl -u Administrator:Administrator -X POST http://localhost:8091/pools/default -d 'memoryQuota=2048' -d 'indexMemoryQuota=512'"
   - cargo install cargo-count --force
   - cargo install cargo-graph --force
   - cargo install cargo-outdated --force
