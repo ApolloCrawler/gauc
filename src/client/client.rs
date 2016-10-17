@@ -14,7 +14,7 @@ use super::super::couchbase::types::response::format_error;
 #[derive(Debug)]
 pub struct Client {
     pub opts: Arc<Mutex<CreateSt>>,
-    pub instance: Instance,
+    pub instance: Arc<Mutex<Instance>>,
     pub uri: String
 }
 
@@ -66,7 +66,7 @@ impl Client {
 
             Client {
                 opts: Arc::new(Mutex::new(opts)),
-                instance: instance,
+                instance: Arc::new(Mutex::new(instance)),
                 uri: uri.to_string()
             }
         }
@@ -102,20 +102,22 @@ impl Client {
                 match response.rc {
                     ErrorType::Success => callback(Ok(response::Get::new(response))),
                     _ => {
-                        callback(Err((Some(response::Get::new(response)), response.error(self.instance))));
+                        let instance = self.instance.lock().unwrap();
+                        callback(Err((Some(response::Get::new(response)), response.error(*instance))));
                     }
                 }
             });
 
             let user_data = &boxed as *const _ as *mut c_void;
 
-            let res = lcb_get3(self.instance, user_data, &gcmd as *const cmd::Get);
+            let instance = self.instance.lock().unwrap();
+            let res = lcb_get3(*instance, user_data, &gcmd as *const cmd::Get);
             if res != ErrorType::Success {
-                callback(Err((None, format_error(self.instance, &res))));
+                callback(Err((None, format_error(*instance, &res))));
             } else {
-                let res = lcb_wait(self.instance);
+                let res = lcb_wait(*instance);
                 if res != ErrorType::Success {
-                    callback(Err((None, format_error(self.instance, &res))))
+                    callback(Err((None, format_error(*instance, &res))))
                 }
             }
         }
@@ -165,20 +167,22 @@ impl Client {
                 match response.rc {
                     ErrorType::Success => callback(Ok(response::Store::new(response))),
                     _ => {
-                        callback(Err((Some(response::Store::new(response)), response.error(self.instance))));
+                        let instance = self.instance.lock().unwrap();
+                        callback(Err((Some(response::Store::new(response)), response.error(*instance))));
                     }
                 }
             });
 
             let user_data = &boxed as *const _ as *mut c_void;
 
-            let res = lcb_store3(self.instance, user_data, &gcmd as *const cmd::Store);
+            let instance = self.instance.lock().unwrap();
+            let res = lcb_store3(*instance, user_data, &gcmd as *const cmd::Store);
             if res != ErrorType::Success {
-                callback(Err((None, format_error(self.instance, &res))))
+                callback(Err((None, format_error(*instance, &res))))
             } else {
-                let res = lcb_wait(self.instance);
+                let res = lcb_wait(*instance);
                 if res != ErrorType::Success {
-                    callback(Err((None, format_error(self.instance, &res))))
+                    callback(Err((None, format_error(*instance, &res))))
                 }
             }
         }
@@ -198,7 +202,8 @@ impl Drop for Client {
     fn drop(&mut self) {
         unsafe {
             info!("Disconnecting from {}", self.uri);
-            lcb_destroy(self.instance);
+            let instance = self.instance.lock().unwrap();
+            lcb_destroy(*instance);
         }
     }
 }

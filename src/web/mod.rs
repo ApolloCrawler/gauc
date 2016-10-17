@@ -6,11 +6,14 @@ mod handler;
 
 use iron::prelude::*;
 use iron::status;
+
+#[allow(unused_imports)]
 use router::Router;
 
+#[allow(unused_imports)]
 use std::sync::mpsc::channel;
 use std::sync::mpsc;
-//
+
 //use self::handler::bucket::doc;
 use super::client::Client;
 use super::couchbase::types::response;
@@ -30,14 +33,10 @@ use super::couchbase::types::response;
 // POST    /bucket/<BUCKET_NAME>/doc/<ID>/set        - set *
 // POST    /bucket/<BUCKET_NAME>/doc/<ID>/upsert     - upsert (explitcit) *
 
-#[allow(unused_mut)]
-#[allow(unused_must_use)]
-#[allow(unused_variables)]
+#[allow(unused_mut, unused_must_use, unused_variables)]
 pub fn start_web(args: &clap::ArgMatches, client: &Client) {
     let port: u16 = args.value_of("rest-port").unwrap().to_string().parse::<u16>().unwrap();
     println!("Starting REST Interface on port {}.", port);
-
-    let mut router = Router::new();
 
     type Msg = Option<response::Store>;
 
@@ -52,6 +51,7 @@ pub fn start_web(args: &clap::ArgMatches, client: &Client) {
         Ok(Response::with((status::Ok, "ok\n")))
     };
 
+//    let mut router = Router::new();
 //    router.get("/bucket/:bucketid/doc/:docid", get_handler, "doc_get");
 //    router.get("/bucket/:bucketid/doc/:docid", doc::get::get_handler, "doc_get");
 //    router.delete("/bucket/:bucketid/doc/:docid", doc::delete::delete_handler, "doc_delete");
