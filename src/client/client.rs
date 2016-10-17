@@ -150,7 +150,7 @@ impl Client {
     pub fn set<F>(&mut self, key: &str, value: &str, callback: F) -> &mut Client
         where F: Fn(Result<&response::Store, (Option<&response::Store>, &'static str)>)
     {
-        return self.store(key, value, Operation::Replace, callback);
+        return self.store(key, value, Operation::Set, callback);
     }
 
     /// Store document in database
