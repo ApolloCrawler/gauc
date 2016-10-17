@@ -18,6 +18,12 @@ pub struct Client {
     pub uri: String
 }
 
+type OperationResultGet = Result<response::Get, (Option<response::Get>, &'static str)>;
+type OperationResultGetInternal<'a> = Result<&'a response::GetInternal, (Option<&'a response::GetInternal>, &'static str)>;
+
+type OperationResultStore = Result<response::Store, (Option<response::Store>, &'static str)>;
+type OperationResultStoreInternal<'a> = Result<&'a response::StoreInternal, (Option<&'a response::StoreInternal>, &'static str)>;
+
 impl Client {
     /// Constructor
     pub fn new(uri: &str) -> Client {
@@ -67,22 +73,22 @@ impl Client {
     }
 
     ///  Will cause the operation to fail if the key already exists in the cluster.
-    pub fn add<F>(&self, key: &str, value: &str, callback: F) -> &Client
-        where F: Fn(Result<&response::Store, (Option<&response::Store>, &'static str)>)
+    pub fn add<'a, F>(&'a self, key: &str, value: &str, callback: F) -> &Client
+        where F: Fn(OperationResultStore)
     {
         return self.store(key, value, Operation::Add, callback);
     }
 
     /// Rather than setting the contents of the entire document, take the value specified in value and _append_ it to the existing bytes in the value.
-    pub fn append<F>(&self, key: &str, value: &str, callback: F) -> &Client
-        where F: Fn(Result<&response::Store, (Option<&response::Store>, &'static str)>)
+    pub fn append<'a, F>(&self, key: &str, value: &str, callback: F) -> &Client
+        where F: Fn(OperationResultStore)
     {
         return self.store(key, value, Operation::Append, callback);
     }
 
     /// Get document from database
-    pub fn get<F>(&self, key: &str, callback: F) -> &Client
-        where F: Fn(Result<&response::Get, (Option<&response::Get>, &'static str)>)
+    pub fn get<'a, F>(&'a self, key: &str, callback: F) -> &Client
+        where F: Fn(OperationResultGet)
     {
         let ckey = CString::new(key).unwrap();
         let mut gcmd = cmd::Get::default();
@@ -92,11 +98,11 @@ impl Client {
         gcmd.key.contig.nbytes = key.len() as u64;
 
         unsafe {
-            let boxed: Box<Fn(&response::Get)> = Box::new(|response: &response::Get| {
+            let boxed: Box<Fn(&response::GetInternal)> = Box::new(|response: &response::GetInternal| {
                 match response.rc {
-                    ErrorType::Success => callback(Ok(response)),
+                    ErrorType::Success => callback(Ok(response::Get::new(response))),
                     _ => {
-                        callback(Err((Some(response), response.error(self.instance))));
+                        callback(Err((Some(response::Get::new(response)), response.error(self.instance))));
                     }
                 }
             });
@@ -118,29 +124,29 @@ impl Client {
     }
 
     /// Like append, but prepends the new value to the existing value.
-    pub fn prepend<F>(&self, key: &str, value: &str, callback: F) -> &Client
-        where F: Fn(Result<&response::Store, (Option<&response::Store>, &'static str)>)
+    pub fn prepend<'a, F>(&'a self, key: &str, value: &str, callback: F) -> &Client
+        where F: Fn(OperationResultStore)
     {
         return self.store(key, value, Operation::Prepend, callback);
     }
 
     /// Will cause the operation to fail _unless_ the key already exists in the cluster.
-    pub fn replace<F>(&self, key: &str, value: &str, callback: F) -> &Client
-        where F: Fn(Result<&response::Store, (Option<&response::Store>, &'static str)>)
+    pub fn replace<'a, F>(&'a self, key: &str, value: &str, callback: F) -> &Client
+        where F: Fn(OperationResultStore)
     {
         return self.store(key, value, Operation::Replace, callback);
     }
 
     /// Unconditionally store the item in the cluster
-    pub fn set<F>(&self, key: &str, value: &str, callback: F) -> &Client
-        where F: Fn(Result<&response::Store, (Option<&response::Store>, &'static str)>)
+    pub fn set<'a, F>(&'a self, key: &str, value: &str, callback: F) -> &Client
+        where F: Fn(OperationResultStore)
     {
         return self.store(key, value, Operation::Set, callback);
     }
 
     /// Store document in database
-    pub fn store<F>(&self, key: &str, value: &str, operation: Operation, callback: F) -> &Client
-        where F: Fn(Result<&response::Store, (Option<&response::Store>, &'static str)>)
+    pub fn store<'a, F>(&'a self, key: &str, value: &str, operation: Operation, callback: F) -> &Client
+        where F: Fn(OperationResultStore)
     {
         let ckey = CString::new(key).unwrap();
         let cvalue = CString::new(value).unwrap();
@@ -155,11 +161,11 @@ impl Client {
         gcmd.operation = operation;
 
         unsafe {
-            let boxed: Box<Fn(&response::Store)> = Box::new(|response: &response::Store| {
+            let boxed: Box<Fn(&response::StoreInternal)> = Box::new(|response: &response::StoreInternal| {
                 match response.rc {
-                    ErrorType::Success => callback(Ok(response)),
+                    ErrorType::Success => callback(Ok(response::Store::new(response))),
                     _ => {
-                        callback(Err((Some(response), response.error(self.instance))));
+                        callback(Err((Some(response::Store::new(response)), response.error(self.instance))));
                     }
                 }
             });
@@ -181,8 +187,8 @@ impl Client {
     }
 
     /// Behaviorally it is identical to set in that it will make the server unconditionally store the item, whether it exists or not.
-    pub fn upsert<F>(&self, key: &str, value: &str, callback: F) -> &Client
-        where F: Fn(Result<&response::Store, (Option<&response::Store>, &'static str)>)
+    pub fn upsert<'a, F>(&'a self, key: &str, value: &str, callback: F) -> &Client
+        where F: Fn(OperationResultStore)
     {
         return self.store(key, value, Operation::Upsert, callback);
     }
@@ -201,19 +207,19 @@ impl Drop for Client {
 unsafe extern "C" fn op_callback(_instance: Instance, cbtype: CallbackType, resp: *const response::Base) {
     match cbtype {
         CallbackType::Get => {
-            let gresp = resp as *const response::Get;
+            let gresp = resp as *const response::GetInternal;
             debug!("{:?}", *gresp);
 
             let cookie = (*gresp).cookie;
-            let callback = cookie as *const Box<Fn(&response::Get)>;
+            let callback = cookie as *const Box<Fn(&response::GetInternal)>;
             (*callback)(&(*gresp));
         },
         CallbackType::Store => {
-            let gresp = resp as *const response::Store;
+            let gresp = resp as *const response::StoreInternal;
             debug!("{:?}", *gresp);
 
             let cookie = (*gresp).cookie;
-            let callback = cookie as *const Box<Fn(&response::Store)>;
+            let callback = cookie as *const Box<Fn(&response::StoreInternal)>;
             (*callback)(&(*gresp));
         },
         _ => error!("! Unknown Callback...")

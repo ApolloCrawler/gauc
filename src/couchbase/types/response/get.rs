@@ -8,7 +8,7 @@ use super::format_error;
 
 #[repr(C)]
 #[derive(Debug)]
-pub struct Get {
+pub struct GetInternal {
     pub cookie: *mut c_void,
     pub key: *const c_void,
     pub nkey: c_ulong,
@@ -23,7 +23,7 @@ pub struct Get {
     pub itmflags: u32,
 }
 
-impl Get {
+impl GetInternal {
     pub fn key(&self) -> Option<String> {
         unsafe {
             match self.rc {
@@ -60,5 +60,28 @@ impl Get {
 
     pub fn error(&self, instance: Instance) -> &'static str {
         return format_error(instance, &self.rc);
+    }
+}
+
+#[derive(Debug)]
+pub struct Get {
+    pub key: Option<String>,
+    pub value: Option<String>,
+    pub cas: u64,
+    pub rc: ErrorType,
+    pub version: u16,
+    pub rflags: u16,
+}
+
+impl Get {
+    pub fn new(internal: &GetInternal) -> Get {
+        Get {
+            key: internal.key(),
+            value: internal.value(),
+            cas: internal.cas,
+            rc: internal.rc,
+            version: internal.version,
+            rflags: internal.rflags
+        }
     }
 }
