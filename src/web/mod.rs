@@ -4,16 +4,16 @@ extern crate router;
 
 mod handler;
 
-//use iron::prelude::*;
-//use iron::status;
-//use router::Router;
-//
-//use std::sync::mpsc::{Sender, Receiver};
-//use std::sync::mpsc;
+use iron::prelude::*;
+use iron::status;
+use router::Router;
+
+use std::sync::mpsc::channel;
+use std::sync::mpsc;
 //
 //use self::handler::bucket::doc;
 use super::client::Client;
-//use super::couchbase::types::response;
+use super::couchbase::types::response;
 
 // Bucket REST Interface
 //
@@ -30,23 +30,28 @@ use super::client::Client;
 // POST    /bucket/<BUCKET_NAME>/doc/<ID>/set        - set *
 // POST    /bucket/<BUCKET_NAME>/doc/<ID>/upsert     - upsert (explitcit) *
 
-pub fn start_web(args: &clap::ArgMatches, _client: &Client) {
+#[allow(unused_mut)]
+#[allow(unused_must_use)]
+#[allow(unused_variables)]
+pub fn start_web(args: &clap::ArgMatches, client: &Client) {
     let port: u16 = args.value_of("rest-port").unwrap().to_string().parse::<u16>().unwrap();
     println!("Starting REST Interface on port {}.", port);
 
-//    let mut router = Router::new();
-//
-//    type CouchbaseResult = Result<&'static response::Store, (Option<&'static response::Store>, &'static str)>;
-//
-//    let get_handler = move |req: &mut Request| -> IronResult<Response> {
-//        let (tx, rx): (Sender<&CouchbaseResult>, Receiver<&CouchbaseResult>) = mpsc::channel();
-//        client.upsert("abc", "def", |result| {
-//            // tx.send(result)
-//        });
-//        let my_result = rx.recv().unwrap();
-//        Ok(Response::with((status::Ok, "ok\n")))
-//    };
-//
+    let mut router = Router::new();
+
+    type Msg = Option<response::Store>;
+
+    let get_handler = move |req: &mut Request| -> IronResult<Response> {
+        // let (tx, rx) = mpsc::channel::<Msg>();
+        let (tx, rx) = mpsc::channel::<i32>();
+        client.upsert("abc", "def", |result| {
+            // tx.send(Some(result.unwrap()))
+            tx.send(42);
+        });
+        let my_result = rx.recv().unwrap();
+        Ok(Response::with((status::Ok, "ok\n")))
+    };
+
 //    router.get("/bucket/:bucketid/doc/:docid", get_handler, "doc_get");
 //    router.get("/bucket/:bucketid/doc/:docid", doc::get::get_handler, "doc_get");
 //    router.delete("/bucket/:bucketid/doc/:docid", doc::delete::delete_handler, "doc_delete");
