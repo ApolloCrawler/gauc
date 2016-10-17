@@ -2,8 +2,8 @@ extern crate clap;
 extern crate iron;
 extern crate router;
 
-// GET /bucket/<BUCKET_NAME>/doc - list
-// GET /bucket/<BUCKET_NAME>/doc/<ID> - get
+// GET  /bucket/<BUCKET_NAME>/doc - list
+// GET  /bucket/<BUCKET_NAME>/doc/<ID> - get
 // POST /bucket/<BUCKET_NAME>/doc/<ID> - upsert
 // POST /bucket/<BUCKET_NAME>/doc/add/<ID> - add
 // POST /bucket/<BUCKET_NAME>/doc/append/<ID> - append
