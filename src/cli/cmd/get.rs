@@ -1,4 +1,4 @@
-use super::super::get_callback;
+use super::super::callback::get::get_callback;
 use super::super::super::client::Client;
 
 /// Handle "get" command

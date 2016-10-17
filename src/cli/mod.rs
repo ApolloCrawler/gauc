@@ -1,37 +1,11 @@
 extern crate clap;
 
+mod callback;
 mod cmd;
-
 use std::io;
 use std::io::prelude::*;
 
 use super::client::Client;
-
-use super::couchbase::types::response::Get;
-use super::couchbase::types::response::Store;
-
-/// Callback handling get operation
-fn get_callback(result: Result<&Get, (Option<&Get>, &'static str)>) {
-    match result {
-        Ok(response) => println!("{}", response.value().unwrap()),
-        Err(e) => {
-            let (_response, error) = e;
-            println!("{}", error);
-        }
-    }
-
-}
-
-/// Callback handling store operation
-fn store_callback(result: Result<&Store, (Option<&Store>, &'static str)>) {
-    match result {
-        Ok(response) => println!("{:?}", response),
-        Err(e) => {
-            let (_response, error) = e;
-            println!("{}", error);
-        }
-    }
-}
 
 pub fn main(args: &clap::ArgMatches) {
     let mut client = Client::new(args.value_of("url").unwrap());

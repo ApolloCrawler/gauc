@@ -1,4 +1,4 @@
-use super::super::store_callback;
+use super::super::callback::store::store_callback;
 use super::super::super::client::Client;
 use super::super::super::couchbase::types::operation::Operation;
 
