@@ -90,11 +90,10 @@ impl Client {
     pub fn get<'a, F>(&'a self, key: &str, callback: F) -> &Client
         where F: Fn(OperationResultGet)
     {
-        let ckey = CString::new(key).unwrap();
         let mut gcmd = cmd::Get::default();
 
         gcmd.key._type = KvBufferType::Copy;
-        gcmd.key.contig.bytes = ckey.as_ptr() as *const libc::c_void;
+        gcmd.key.contig.bytes = key.as_bytes().as_ptr() as *const libc::c_void;
         gcmd.key.contig.nbytes = key.len() as u64;
 
         unsafe {
@@ -154,19 +153,13 @@ impl Client {
         println!("key = {:?}", key);
         println!("value = {:?}", value);
 
-        println!("Constructing ckey");
-        let ckey = CString::new(key).unwrap();
-
-        println!("Constructing cvalue");
-        let cvalue = CString::new(value).unwrap();
-
         println!("Constructing gcmd");
         let mut gcmd = cmd::Store::default();
         gcmd.key._type = KvBufferType::Copy;
-        gcmd.key.contig.bytes = ckey.as_ptr() as *const libc::c_void;
+        gcmd.key.contig.bytes = key.as_bytes().as_ptr() as *const libc::c_void;
         gcmd.key.contig.nbytes = key.len() as u64;
         gcmd.value._type = KvBufferType::Copy;
-        gcmd.value.contig.bytes = cvalue.as_ptr() as *const libc::c_void;
+        gcmd.value.contig.bytes = value.as_bytes().as_ptr() as *const libc::c_void;
         gcmd.value.contig.nbytes = value.len() as u64;
         gcmd.operation = operation;
 
