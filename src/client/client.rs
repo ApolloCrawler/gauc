@@ -141,6 +141,7 @@ impl Client {
     pub fn set<'a, F>(&'a self, key: &str, value: &str, callback: F) -> &Client
         where F: Fn(OperationResultStore)
     {
+        println!("Calling client.store");
         return self.store(key, value, Operation::Set, callback);
     }
 
@@ -148,9 +149,18 @@ impl Client {
     pub fn store<'a, F>(&'a self, key: &str, value: &str, operation: Operation, callback: F) -> &Client
         where F: Fn(OperationResultStore)
     {
+        println!("Called store");
+
+        println!("key = {:?}", key);
+        println!("value = {:?}", value);
+
+        println!("Constructing ckey");
         let ckey = CString::new(key).unwrap();
+
+        println!("Constructing cvalue");
         let cvalue = CString::new(value).unwrap();
 
+        println!("Constructing gcmd");
         let mut gcmd = cmd::Store::default();
         gcmd.key._type = KvBufferType::Copy;
         gcmd.key.contig.bytes = ckey.as_ptr() as *const libc::c_void;
@@ -160,8 +170,11 @@ impl Client {
         gcmd.value.contig.nbytes = value.len() as u64;
         gcmd.operation = operation;
 
+        println!("Preparing to enter unsafe world!");
         unsafe {
+            println!("Boxing");
             let boxed: Box<Fn(&response::StoreInternal)> = Box::new(|response: &response::StoreInternal| {
+                println!("Calling boxed function");
                 match response.rc {
                     ErrorType::Success => callback(Ok(response::Store::new(response))),
                     _ => {
@@ -170,12 +183,16 @@ impl Client {
                 }
             });
 
+            println!("Converting to user_data");
             let user_data = &boxed as *const _ as *mut c_void;
 
+            println!("Calling lcb_store3");
             let res = lcb_store3(self.instance, user_data, &gcmd as *const cmd::Store);
             if res != ErrorType::Success {
+                println!("lcb_store3 success");
                 callback(Err((None, format_error(self.instance, &res))))
             } else {
+                println!("lcb_store3 error");
                 let res = lcb_wait(self.instance);
                 if res != ErrorType::Success {
                     callback(Err((None, format_error(self.instance, &res))))
