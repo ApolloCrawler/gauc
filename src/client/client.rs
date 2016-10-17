@@ -97,16 +97,16 @@ impl Client {
         gcmd.key.contig.nbytes = key.len() as u64;
 
         unsafe {
-            let boxed: Box<Fn(&response::GetInternal)> = Box::new(|response: &response::GetInternal| {
+            let boxed: Box<Box<Fn(&response::GetInternal)>> = Box::new(Box::new(|response: &response::GetInternal| {
                 match response.rc {
                     ErrorType::Success => callback(Ok(response::Get::new(response))),
                     _ => {
                         callback(Err((Some(response::Get::new(response)), response.error(self.instance))));
                     }
                 }
-            });
+            }));
 
-            let user_data = &boxed as *const _ as *mut c_void;
+            let user_data = Box::into_raw(boxed) as *const _ as *mut c_void;
 
             let res = lcb_get3(self.instance, user_data, &gcmd as *const cmd::Get);
             if res != ErrorType::Success {
@@ -166,7 +166,7 @@ impl Client {
         println!("Preparing to enter unsafe world!");
         unsafe {
             println!("Boxing");
-            let boxed: Box<Fn(&response::StoreInternal)> = Box::new(|response: &response::StoreInternal| {
+            let boxed: Box<Box<Fn(&response::StoreInternal)>> = Box::new(Box::new(|response: &response::StoreInternal| {
                 println!("Calling boxed function");
                 match response.rc {
                     ErrorType::Success => callback(Ok(response::Store::new(response))),
@@ -174,10 +174,11 @@ impl Client {
                         callback(Err((Some(response::Store::new(response)), response.error(self.instance))));
                     }
                 }
-            });
+            }));
+
 
             println!("Converting to user_data");
-            let user_data = &boxed as *const _ as *mut c_void;
+            let user_data = Box::into_raw(boxed) as *const _ as *mut c_void;
 
             println!("Calling lcb_store3");
             let res = lcb_store3(self.instance, user_data, &gcmd as *const cmd::Store);
