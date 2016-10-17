@@ -3,25 +3,19 @@ extern crate libc;
 use libc::{c_void};
 use std::ffi::CStr;
 use std::ffi::CString;
-use std::{process, ptr, thread, time};
+use std::{process, ptr};
+
+use std::sync::{Arc, Mutex};
 
 use super::super::couchbase::*;
 
 use super::super::couchbase::types::response::format_error;
 
 #[derive(Debug)]
-pub struct ClientOps {
-    pub total: usize,
-    pub success: usize,
-    pub fail: usize
-}
-
-#[derive(Debug)]
 pub struct Client {
-    pub opts: CreateSt,
+    pub opts: Arc<Mutex<CreateSt>>,
     pub instance: Instance,
-    pub uri: String,
-    pub ops: ClientOps
+    pub uri: String
 }
 
 impl Client {
@@ -64,37 +58,30 @@ impl Client {
             lcb_install_callback3(instance, CallbackType::Get, Some(op_callback));
             lcb_install_callback3(instance, CallbackType::Store, Some(op_callback));
 
-            let ops = ClientOps {
-                total: 0,
-                success: 0,
-                fail: 0
-            };
-
             Client {
-                opts: opts,
+                opts: Arc::new(Mutex::new(opts)),
                 instance: instance,
-                uri: uri.to_string(),
-                ops: ops
+                uri: uri.to_string()
             }
         }
     }
 
     ///  Will cause the operation to fail if the key already exists in the cluster.
-    pub fn add<F>(&mut self, key: &str, value: &str, callback: F) -> &mut Client
+    pub fn add<F>(&self, key: &str, value: &str, callback: F) -> &Client
         where F: Fn(Result<&response::Store, (Option<&response::Store>, &'static str)>)
     {
         return self.store(key, value, Operation::Add, callback);
     }
 
     /// Rather than setting the contents of the entire document, take the value specified in value and _append_ it to the existing bytes in the value.
-    pub fn append<F>(&mut self, key: &str, value: &str, callback: F) -> &mut Client
+    pub fn append<F>(&self, key: &str, value: &str, callback: F) -> &Client
         where F: Fn(Result<&response::Store, (Option<&response::Store>, &'static str)>)
     {
         return self.store(key, value, Operation::Append, callback);
     }
 
     /// Get document from database
-    pub fn get<F>(&mut self, key: &str, callback: F) -> &mut Client
+    pub fn get<F>(&self, key: &str, callback: F) -> &Client
         where F: Fn(Result<&response::Get, (Option<&response::Get>, &'static str)>)
     {
         let ckey = CString::new(key).unwrap();
@@ -103,8 +90,6 @@ impl Client {
         gcmd.key._type = KvBufferType::Copy;
         gcmd.key.contig.bytes = ckey.as_ptr() as *const libc::c_void;
         gcmd.key.contig.nbytes = key.len() as u64;
-
-        self.ops.total += 1;
 
         unsafe {
             let boxed: Box<Fn(&response::Get)> = Box::new(|response: &response::Get| {
@@ -133,28 +118,28 @@ impl Client {
     }
 
     /// Like append, but prepends the new value to the existing value.
-    pub fn prepend<F>(&mut self, key: &str, value: &str, callback: F) -> &mut Client
+    pub fn prepend<F>(&self, key: &str, value: &str, callback: F) -> &Client
         where F: Fn(Result<&response::Store, (Option<&response::Store>, &'static str)>)
     {
         return self.store(key, value, Operation::Prepend, callback);
     }
 
     /// Will cause the operation to fail _unless_ the key already exists in the cluster.
-    pub fn replace<F>(&mut self, key: &str, value: &str, callback: F) -> &mut Client
+    pub fn replace<F>(&self, key: &str, value: &str, callback: F) -> &Client
         where F: Fn(Result<&response::Store, (Option<&response::Store>, &'static str)>)
     {
         return self.store(key, value, Operation::Replace, callback);
     }
 
     /// Unconditionally store the item in the cluster
-    pub fn set<F>(&mut self, key: &str, value: &str, callback: F) -> &mut Client
+    pub fn set<F>(&self, key: &str, value: &str, callback: F) -> &Client
         where F: Fn(Result<&response::Store, (Option<&response::Store>, &'static str)>)
     {
         return self.store(key, value, Operation::Set, callback);
     }
 
     /// Store document in database
-    pub fn store<F>(&mut self, key: &str, value: &str, operation: Operation, callback: F) -> &mut Client
+    pub fn store<F>(&self, key: &str, value: &str, operation: Operation, callback: F) -> &Client
         where F: Fn(Result<&response::Store, (Option<&response::Store>, &'static str)>)
     {
         let ckey = CString::new(key).unwrap();
@@ -168,8 +153,6 @@ impl Client {
         gcmd.value.contig.bytes = cvalue.as_ptr() as *const libc::c_void;
         gcmd.value.contig.nbytes = value.len() as u64;
         gcmd.operation = operation;
-
-        self.ops.total += 1;
 
         unsafe {
             let boxed: Box<Fn(&response::Store)> = Box::new(|response: &response::Store| {
@@ -198,43 +181,10 @@ impl Client {
     }
 
     /// Behaviorally it is identical to set in that it will make the server unconditionally store the item, whether it exists or not.
-    pub fn upsert<F>(&mut self, key: &str, value: &str, callback: F) -> &mut Client
+    pub fn upsert<F>(&self, key: &str, value: &str, callback: F) -> &Client
         where F: Fn(Result<&response::Store, (Option<&response::Store>, &'static str)>)
     {
         return self.store(key, value, Operation::Upsert, callback);
-    }
-
-    /// Get count of finished commands
-    pub fn ops_unfinished_count(&self) -> usize {
-        return self.ops.total;
-    }
-
-    /// Get count of finished commands
-    pub fn ops_finished(&mut self) -> bool {
-        return self.ops_unfinished_count() == 0;
-    }
-
-    /// Wait for pending commands to finish
-    pub fn wait(&mut self) {
-         let interval = time::Duration::from_millis(100);
-         while self.ops_finished() == false {
-             thread::sleep(interval);
-         }
-    }
-
-    /// Wait for pending commands to finish for max_msec
-    pub fn wait_max(&mut self, max_msec: usize) {
-        let mut t = 0 as usize;
-        let interval = time::Duration::from_millis(100);
-        while self.ops_finished() == false {
-            thread::sleep(interval);
-            t += 100;
-
-            if t > max_msec {
-                println!("wait_max - still {} operations unfinished", self.ops_unfinished_count());
-                break;
-            }
-        }
     }
 }
 

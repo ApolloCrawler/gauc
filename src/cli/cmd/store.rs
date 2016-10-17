@@ -3,7 +3,7 @@ use super::super::super::client::Client;
 use super::super::super::couchbase::types::operation::Operation;
 
 /// Handle "store" command
-pub fn cmd_store(client: &mut Client, parts: &Vec<&str>) -> bool {
+pub fn cmd_store(client: &Client, parts: &Vec<&str>) -> bool {
     match parts.len() {
         1 | 2 => println!("Wrong number of arguments, expected key and value"),
         _ => {

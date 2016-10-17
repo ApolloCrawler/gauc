@@ -2,7 +2,7 @@ use super::super::callback::get::get_callback;
 use super::super::super::client::Client;
 
 /// Handle "get" command
-pub fn cmd_get(client: &mut Client, parts: &Vec<&str>) -> bool {
+pub fn cmd_get(client: &Client, parts: &Vec<&str>) -> bool {
     match parts.len() {
         2 => {
             client.get(parts[1], get_callback);

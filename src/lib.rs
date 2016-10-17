@@ -1,7 +1,9 @@
 #[macro_use]
 extern crate log;
 
+extern crate iron;
 extern crate libc;
+extern crate router;
 
 pub mod cli;
 pub mod client;
