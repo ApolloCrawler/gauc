@@ -236,6 +236,10 @@ impl Client {
     {
         return self.store(key, value, Operation::Upsert, callback);
     }
+
+    pub fn version(&self) -> i32 {
+        self.opts.lock().unwrap().version()
+    }
 }
 
 impl Drop for Client {

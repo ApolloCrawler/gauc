@@ -15,7 +15,7 @@ fn main() {
     // Get data
     client.get("foo", |res| {
         if let Ok(response) = res {
-            println!("{} - {}", response.key().unwrap(), response.value().unwrap())
+            println!("{} - {}", response.key.unwrap(), response.value.unwrap())
         }
     });
 }

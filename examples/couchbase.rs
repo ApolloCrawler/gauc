@@ -55,7 +55,7 @@ unsafe extern "C" fn op_callback(_instance: Instance, cbtype: CallbackType, resp
     match cbtype {
         CallbackType::Get => {
             println!("> Get Callback!");
-            let gresp = resp as *const response::Get;
+            let gresp = resp as *const response::GetInternal;
             println!(">> CAS: {}", (*gresp).cas);
 
             if (*gresp).value.is_null() == false {
