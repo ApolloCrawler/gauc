@@ -78,13 +78,13 @@ fn main() {
 
     env_logger::init().unwrap();
 
-    let client = Client::new(matches.value_of("url").unwrap());
+    let mut client = Client::new(matches.value_of("url").unwrap());
 
     if matches.is_present("rest") {
-        web::start_web(&matches, &client);
+        web::start_web(&matches, &mut client);
     }
 
     if matches.is_present("interactive") {
-        cli::main(&matches, &client);
+        cli::main(&matches, &mut client);
     }
 }

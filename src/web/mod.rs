@@ -33,7 +33,7 @@ use super::couchbase::types::response;
 #[allow(unused_mut)]
 #[allow(unused_must_use)]
 #[allow(unused_variables)]
-pub fn start_web(args: &clap::ArgMatches, client: &Client) {
+pub fn start_web(args: &clap::ArgMatches, client: &mut Client) {
     let port: u16 = args.value_of("rest-port").unwrap().to_string().parse::<u16>().unwrap();
     println!("Starting REST Interface on port {}.", port);
 

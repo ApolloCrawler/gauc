@@ -3,7 +3,8 @@ extern crate libc;
 use libc::{c_void};
 use std::ffi::CStr;
 use std::ffi::CString;
-use std::{process, ptr};
+use std::{fmt, process, ptr};
+use std::collections::HashMap;
 
 use std::sync::{Arc, Mutex};
 
@@ -11,18 +12,59 @@ use super::super::couchbase::*;
 
 use super::super::couchbase::types::response::format_error;
 
+pub type OperationResultGet = Result<response::Get, (Option<response::Get>, &'static str)>;
+pub type OperationResultGetInternal<'a> = Result<&'a response::GetInternal, (Option<&'a response::GetInternal>, &'static str)>;
+
+pub type OperationResultStore = Result<response::Store, (Option<response::Store>, &'static str)>;
+pub type OperationResultStoreInternal<'a> = Result<&'a response::StoreInternal, (Option<&'a response::StoreInternal>, &'static str)>;
+
+pub struct CouchbaseOperation<T> {
+    counter: u64,
+    map: HashMap<u64, T>
+}
+
+impl<T> fmt::Debug for CouchbaseOperation<T> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "CouchbaseOperation {{ counter: {}, length: {} }}", self.counter, self.map.len())
+    }
+}
+
+impl<T> CouchbaseOperation<T> {
+    pub fn new() -> CouchbaseOperation<T> {
+        CouchbaseOperation {
+            counter: 0,
+            map: HashMap::new()
+        }
+    }
+
+    pub fn increment_counter(&mut self) -> u64 {
+        self.counter += 1;
+        return self.counter;
+    }
+}
+
+#[derive(Debug)]
+pub struct CouchbaseOperations {
+    get: CouchbaseOperation<cmd::Get>,
+    store: CouchbaseOperation<cmd::Get>,
+}
+
+impl CouchbaseOperations {
+    pub fn new() -> CouchbaseOperations {
+        CouchbaseOperations {
+            get: CouchbaseOperation::new(),
+            store: CouchbaseOperation::new()
+        }
+    }
+}
+
 #[derive(Debug)]
 pub struct Client {
     pub opts: Arc<Mutex<CreateSt>>,
     pub instance: Instance,
-    pub uri: String
+    pub uri: String,
+    pub operations: CouchbaseOperations
 }
-
-type OperationResultGet = Result<response::Get, (Option<response::Get>, &'static str)>;
-type OperationResultGetInternal<'a> = Result<&'a response::GetInternal, (Option<&'a response::GetInternal>, &'static str)>;
-
-type OperationResultStore = Result<response::Store, (Option<response::Store>, &'static str)>;
-type OperationResultStoreInternal<'a> = Result<&'a response::StoreInternal, (Option<&'a response::StoreInternal>, &'static str)>;
 
 impl Client {
     /// Constructor
@@ -67,27 +109,29 @@ impl Client {
             Client {
                 opts: Arc::new(Mutex::new(opts)),
                 instance: instance,
-                uri: uri.to_string()
+                uri: uri.to_string(),
+                operations: CouchbaseOperations::new()
+
             }
         }
     }
 
     ///  Will cause the operation to fail if the key already exists in the cluster.
-    pub fn add<'a, F>(&'a self, key: &str, value: &str, callback: F) -> &Client
+    pub fn add<'a, F>(&'a mut self, key: &str, value: &str, callback: F) -> &Client
         where F: Fn(OperationResultStore)
     {
         return self.store(key, value, Operation::Add, callback);
     }
 
     /// Rather than setting the contents of the entire document, take the value specified in value and _append_ it to the existing bytes in the value.
-    pub fn append<'a, F>(&self, key: &str, value: &str, callback: F) -> &Client
+    pub fn append<'a, F>(&'a mut self, key: &str, value: &str, callback: F) -> &Client
         where F: Fn(OperationResultStore)
     {
         return self.store(key, value, Operation::Append, callback);
     }
 
     /// Get document from database
-    pub fn get<'a, F>(&'a self, key: &str, callback: F) -> &Client
+    pub fn get<'a, F>(&'a mut self, key: &str, callback: F) -> &Client
         where F: Fn(OperationResultGet)
     {
         let mut gcmd = cmd::Get::default();
@@ -97,6 +141,8 @@ impl Client {
         gcmd.key.contig.nbytes = key.len() as u64;
 
         unsafe {
+            let _id = self.operations.get.increment_counter();
+
             let boxed: Box<Box<Fn(&response::GetInternal)>> = Box::new(Box::new(|response: &response::GetInternal| {
                 match response.rc {
                     ErrorType::Success => callback(Ok(response::Get::new(response))),
@@ -123,37 +169,30 @@ impl Client {
     }
 
     /// Like append, but prepends the new value to the existing value.
-    pub fn prepend<'a, F>(&'a self, key: &str, value: &str, callback: F) -> &Client
+    pub fn prepend<'a, F>(&'a mut self, key: &str, value: &str, callback: F) -> &Client
         where F: Fn(OperationResultStore)
     {
         return self.store(key, value, Operation::Prepend, callback);
     }
 
     /// Will cause the operation to fail _unless_ the key already exists in the cluster.
-    pub fn replace<'a, F>(&'a self, key: &str, value: &str, callback: F) -> &Client
+    pub fn replace<'a, F>(&'a mut self, key: &str, value: &str, callback: F) -> &Client
         where F: Fn(OperationResultStore)
     {
         return self.store(key, value, Operation::Replace, callback);
     }
 
     /// Unconditionally store the item in the cluster
-    pub fn set<'a, F>(&'a self, key: &str, value: &str, callback: F) -> &Client
+    pub fn set<'a, F>(&'a mut self, key: &str, value: &str, callback: F) -> &Client
         where F: Fn(OperationResultStore)
     {
-        println!("Calling client.store");
         return self.store(key, value, Operation::Set, callback);
     }
 
     /// Store document in database
-    pub fn store<'a, F>(&'a self, key: &str, value: &str, operation: Operation, callback: F) -> &Client
+    pub fn store<'a, F>(&'a mut self, key: &str, value: &str, operation: Operation, callback: F) -> &Client
         where F: Fn(OperationResultStore)
     {
-        println!("Called store");
-
-        println!("key = {:?}", key);
-        println!("value = {:?}", value);
-
-        println!("Constructing gcmd");
         let mut gcmd = cmd::Store::default();
         gcmd.key._type = KvBufferType::Copy;
         gcmd.key.contig.bytes = key.as_bytes().as_ptr() as *const libc::c_void;
@@ -163,11 +202,10 @@ impl Client {
         gcmd.value.contig.nbytes = value.len() as u64;
         gcmd.operation = operation;
 
-        println!("Preparing to enter unsafe world!");
         unsafe {
-            println!("Boxing");
+            let _id = self.operations.store.increment_counter();
+
             let boxed: Box<Box<Fn(&response::StoreInternal)>> = Box::new(Box::new(|response: &response::StoreInternal| {
-                println!("Calling boxed function");
                 match response.rc {
                     ErrorType::Success => callback(Ok(response::Store::new(response))),
                     _ => {
@@ -176,17 +214,12 @@ impl Client {
                 }
             }));
 
-
-            println!("Converting to user_data");
             let user_data = Box::into_raw(boxed) as *const _ as *mut c_void;
 
-            println!("Calling lcb_store3");
             let res = lcb_store3(self.instance, user_data, &gcmd as *const cmd::Store);
             if res != ErrorType::Success {
-                println!("lcb_store3 success");
                 callback(Err((None, format_error(self.instance, &res))))
             } else {
-                println!("lcb_store3 error");
                 let res = lcb_wait(self.instance);
                 if res != ErrorType::Success {
                     callback(Err((None, format_error(self.instance, &res))))
@@ -198,7 +231,7 @@ impl Client {
     }
 
     /// Behaviorally it is identical to set in that it will make the server unconditionally store the item, whether it exists or not.
-    pub fn upsert<'a, F>(&'a self, key: &str, value: &str, callback: F) -> &Client
+    pub fn upsert<'a, F>(&'a mut self, key: &str, value: &str, callback: F) -> &Client
         where F: Fn(OperationResultStore)
     {
         return self.store(key, value, Operation::Upsert, callback);
