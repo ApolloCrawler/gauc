@@ -8,7 +8,7 @@ This project was originaly inspired by [couchbase-rs](https://github.com/daschl/
 
 ## Status
 
-[![Build Status](https://travis-ci.org/korczis/gauc.svg?branch=master)](https://travis-ci.org/korczis/gauc)
+[![Build Status](https://travis-ci.org/ApolloCrawler/gauc.svg?branch=master)](https://travis-ci.org/ApolloCrawler/gauc)
 [![Crates.io](https://img.shields.io/crates/v/gauc.svg)](https://crates.io/crates/gauc)
 [![Crates.io](https://img.shields.io/crates/d/gauc.svg)](https://crates.io/crates/gauc)
 [![Crates.io](https://img.shields.io/crates/dv/gauc.svg)](https://crates.io/crates/gauc)
