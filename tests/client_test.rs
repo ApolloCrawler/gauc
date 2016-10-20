@@ -9,7 +9,7 @@ const DEFAULT_CONNECTION_STRING: &'static str = "couchbase://localhost/default";
 #[test]
 fn it_connects() {
     let client = Client::new(DEFAULT_CONNECTION_STRING);
-    assert!(client.opts.version() == 3);
+    assert!(client.opts.lock().unwrap().version() == 3);
 }
 
 #[test]
