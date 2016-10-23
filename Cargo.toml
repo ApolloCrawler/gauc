@@ -28,6 +28,7 @@ iron = ">= 0.4.0"
 libc = ">= 0.2.16"
 log = ">= 0.3.6"
 router = ">= 0.4.0"
+serde = ">= 0.8.16"
 
 [lib]
 name = "gauc"
