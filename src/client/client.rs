@@ -6,7 +6,7 @@ use std::ffi::CString;
 use std::{fmt, process, ptr};
 use std::collections::HashMap;
 use std::mem;
-use std::mem::{transmute};
+use std::mem::{forget, transmute};
 use std::sync::mpsc;
 use std::sync::mpsc::{Sender, Receiver};
 
@@ -144,11 +144,15 @@ impl Client {
     pub fn get<'a, F>(&'a mut self, key: &str, callback: F) -> &Client
         where F: Fn(OperationResultGet) + 'static
     {
+        let key = key.to_owned();
+
         let mut gcmd = cmd::Get::default();
 
         gcmd.key._type = KvBufferType::Copy;
         gcmd.key.contig.bytes = key.as_bytes().as_ptr() as *const libc::c_void;
         gcmd.key.contig.nbytes = key.len() as u64;
+
+        forget(key);
 
         unsafe {
             let _id = self.operations.get.increment_counter();
@@ -219,6 +223,8 @@ impl Client {
     pub fn store<'a, F>(&'a mut self, key: &str, value: &str, operation: Operation, callback: F) -> &Client
         where F: Fn(OperationResultStore) + 'static
     {
+        let key = key.to_owned();
+
         let mut gcmd = cmd::Store::default();
         gcmd.key._type = KvBufferType::Copy;
         gcmd.key.contig.bytes = key.as_bytes().as_ptr() as *const libc::c_void;
@@ -227,6 +233,8 @@ impl Client {
         gcmd.value.contig.bytes = value.as_bytes().as_ptr() as *const libc::c_void;
         gcmd.value.contig.nbytes = value.len() as u64;
         gcmd.operation = operation;
+
+        forget(key);
 
         unsafe {
             let _id = self.operations.store.increment_counter();
