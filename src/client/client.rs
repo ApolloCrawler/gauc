@@ -6,7 +6,7 @@ use std::ffi::CString;
 use std::{fmt, process, ptr};
 use std::collections::HashMap;
 use std::mem;
-use std::mem::{transmute};
+use std::mem::{forget, transmute};
 use std::sync::mpsc;
 use std::sync::mpsc::{Sender, Receiver};
 
@@ -144,6 +144,8 @@ impl Client {
     pub fn get<'a, F>(&'a mut self, key: &str, callback: F) -> &Client
         where F: Fn(OperationResultGet) + 'static
     {
+        let key = key.to_owned();
+
         let mut gcmd = cmd::Get::default();
         
         gcmd.key._type = KvBufferType::Copy;
@@ -182,6 +184,8 @@ impl Client {
             }
         }
 
+        forget(key);
+
         return self;
     }
 
@@ -219,6 +223,8 @@ impl Client {
     pub fn store<'a, F>(&'a mut self, key: &str, value: &str, operation: Operation, callback: F) -> &Client
         where F: Fn(OperationResultStore) + 'static
     {
+        let key = key.to_owned();
+
         let mut gcmd = cmd::Store::default();
         gcmd.key._type = KvBufferType::Copy;
         gcmd.key.contig.bytes = key.as_bytes().as_ptr() as *const libc::c_void;
@@ -259,7 +265,6 @@ impl Client {
                 }
             }
         }
-
         
         return self;
     }
@@ -295,7 +300,7 @@ unsafe extern "C" fn op_callback(_instance: Instance, cbtype: CallbackType, resp
             let callback: Box<Box<Fn(&response::GetInternal)>> = Box::from_raw(cookie as *mut Box<Fn(&response::GetInternal)>);
             debug!("Retreived boxed box occupies {} bytes in the stack", mem::size_of_val(&callback));
 
-            // debug!("Got get callback address {:?}", callback);
+            debug!("Got get callback address {:?}", callback);
 
             (*callback)(&(*gresp));
         },
@@ -310,7 +315,7 @@ unsafe extern "C" fn op_callback(_instance: Instance, cbtype: CallbackType, resp
             let callback: Box<Box<Fn(&response::StoreInternal)>> = Box::from_raw(cookie as *mut Box<Fn(&response::StoreInternal)>);
             debug!("Retreived boxed box occupies {} bytes in the stack", mem::size_of_val(&callback));
 
-            // debug!("Got store callback address {:?}", callback);
+            debug!("Got store callback address {:?}", callback);
 
             (*callback)(&(*gresp));
         },
