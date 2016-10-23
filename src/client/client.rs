@@ -5,6 +5,7 @@ use std::ffi::CStr;
 use std::ffi::CString;
 use std::{fmt, process, ptr};
 use std::collections::HashMap;
+use std::mem::{transmute};
 
 use std::sync::{Arc, Mutex};
 
@@ -12,11 +13,17 @@ use super::super::couchbase::*;
 
 use super::super::couchbase::types::response::format_error;
 
+// Gets
 pub type OperationResultGet = Result<response::Get, (Option<response::Get>, &'static str)>;
+pub type OperationResultGetCallback = Box<Box<Fn(&response::Get)>>;
 pub type OperationResultGetInternal<'a> = Result<&'a response::GetInternal, (Option<&'a response::GetInternal>, &'static str)>;
+pub type OperationResultGetInternalCallback = Box<Box<Fn(&response::GetInternal)>>;
 
+// Stores
 pub type OperationResultStore = Result<response::Store, (Option<response::Store>, &'static str)>;
+pub type OperationResultStoreCallback = Box<Box<Fn(&response::Store)>>;
 pub type OperationResultStoreInternal<'a> = Result<&'a response::StoreInternal, (Option<&'a response::StoreInternal>, &'static str)>;
+pub type OperationResultStoreInternalCallback = Box<Box<Fn(&response::StoreInternal)>>;
 
 pub struct CouchbaseOperation<T> {
     counter: u64,
@@ -143,16 +150,17 @@ impl Client {
         unsafe {
             let _id = self.operations.get.increment_counter();
 
-            let boxed: Box<Box<Fn(&response::GetInternal)>> = Box::new(Box::new(|response: &response::GetInternal| {
-                match response.rc {
-                    ErrorType::Success => callback(Ok(response::Get::new(response))),
+            let boxed: OperationResultGetInternalCallback = Box::new(Box::new(move |result: &response::GetInternal| {
+                println!("{:?}", result);
+                match result.rc {
+                    // ErrorType::Success => callback(Ok(response::Get::new(result))),
                     _ => {
-                        callback(Err((Some(response::Get::new(response)), response.error(self.instance))));
+                        // callback(Err((Some(response::Get::new(result)), result.error(self.instance))));
                     }
                 }
             }));
 
-            let user_data = Box::into_raw(boxed) as *const _ as *mut c_void;
+            let user_data = transmute::<*const _, *mut c_void>(Box::into_raw(boxed));
 
             let res = lcb_get3(self.instance, user_data, &gcmd as *const cmd::Get);
             if res != ErrorType::Success {
@@ -205,16 +213,17 @@ impl Client {
         unsafe {
             let _id = self.operations.store.increment_counter();
 
-            let boxed: Box<Box<Fn(&response::StoreInternal)>> = Box::new(Box::new(|response: &response::StoreInternal| {
-                match response.rc {
-                    ErrorType::Success => callback(Ok(response::Store::new(response))),
+            let boxed: OperationResultStoreInternalCallback = Box::new(Box::new(move |result: &response::StoreInternal| {
+                println!("{:?}", result);
+                match result.rc {
+                    // ErrorType::Success => callback(Ok(response::Store::new(result))),
                     _ => {
-                        callback(Err((Some(response::Store::new(response)), response.error(self.instance))));
+                        // callback(Err((Some(response::Store::new(result)), result.error(self.instance))));
                     }
                 }
             }));
 
-            let user_data = Box::into_raw(boxed) as *const _ as *mut c_void;
+            let user_data = transmute::<*const _, *mut c_void>(Box::into_raw(boxed));
 
             let res = lcb_store3(self.instance, user_data, &gcmd as *const cmd::Store);
             if res != ErrorType::Success {
@@ -255,16 +264,16 @@ unsafe extern "C" fn op_callback(_instance: Instance, cbtype: CallbackType, resp
             debug!("{:?}", *gresp);
 
             let cookie = (*gresp).cookie;
-            let callback = cookie as *const Box<Fn(&response::GetInternal)>;
-            (*callback)(&(*gresp));
+            let user_data = transmute::<*mut c_void, *const Box<Fn(&response::GetInternal)>>(cookie);
+            (*user_data)(&(*gresp));
         },
         CallbackType::Store => {
             let gresp = resp as *const response::StoreInternal;
             debug!("{:?}", *gresp);
 
             let cookie = (*gresp).cookie;
-            let callback = cookie as *const Box<Fn(&response::StoreInternal)>;
-            (*callback)(&(*gresp));
+            let user_data = transmute::<*mut c_void, *const Box<Fn(&response::StoreInternal)>>(cookie);
+            (*user_data)(&(*gresp));
         },
         _ => error!("! Unknown Callback...")
     };

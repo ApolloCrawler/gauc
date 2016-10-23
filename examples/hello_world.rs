@@ -18,4 +18,19 @@ fn main() {
             println!("{} - {}", response.key.unwrap(), response.value.unwrap())
         }
     });
+
+    // Store some data
+    client.upsert("foo", "{\"msg\": \"This is test!\"}", |res| {
+        if let Ok(response) = res {
+            println!("Created new document, CAS: {}", response.cas)
+        }
+    });
+
+    // Get data
+    client.get("foo", |res| {
+        if let Ok(response) = res {
+            println!("{} - {}", response.key.unwrap(), response.value.unwrap())
+        }
+    });
 }
+

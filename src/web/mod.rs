@@ -8,7 +8,7 @@ use iron::prelude::*;
 use iron::status;
 use router::Router;
 
-use std::sync::mpsc::channel;
+// use std::sync::mpsc::channel;
 use std::sync::mpsc;
 //
 //use self::handler::bucket::doc;
