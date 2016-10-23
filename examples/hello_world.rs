@@ -7,39 +7,31 @@ use std::{thread, time};
 fn main() {
     env_logger::init().unwrap();
 
-    let mut client = Client::new("couchbase://korczis.com/default");
+    let mut client = Client::new("couchbase://localhost/default");
 
 //     println!("{:?}", client.get_sync("foo"));
 
-    // Store some data
-    client.upsert("foo", "{\"msg\": \"This is test!\"}", |res| {
-        if let Ok(response) = res {
-            println!("Created new document, CAS: {}", response.cas)
-        }
-    });
+    for i in 0..2 {
+        println!("Iteration #{}", i);
 
-    // Get data
-    client.get("foo", |res| {
-        if let Ok(response) = res {
-            println!("{} - {}", response.key.unwrap(), response.value.unwrap())
-        }
-    });
+        // Store some data
+        client.upsert("foo", "{\"msg\": \"This is test!\"}", |res| {
+            if let Ok(response) = res {
+                // println!("Created new document, CAS: {}", response.cas)
+            }
+        });
 
-    // Store some data
-    client.upsert("foo", "{\"msg\": \"This is test!\"}", |res| {
-        if let Ok(response) = res {
-            println!("Created new document, CAS: {}", response.cas)
-        }
-    });
+//        let sleep_interval = time::Duration::from_millis(100);
+//        thread::sleep(sleep_interval);
 
-    // Get data
-    client.get("foo", |res| {
-        if let Ok(response) = res {
-            println!("{} - {}", response.key.unwrap(), response.value.unwrap())
-        }
-    });
+        // Get data
+        client.get("foo", |res| {
+            if let Ok(response) = res {
+                // println!("{} - {}", response.key.unwrap(), response.value.unwrap())
+            }
+        });
+    }
 
     let sleep_interval = time::Duration::from_millis(1000);
     thread::sleep(sleep_interval);
 }
-

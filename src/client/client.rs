@@ -5,6 +5,7 @@ use std::ffi::CStr;
 use std::ffi::CString;
 use std::{fmt, process, ptr};
 use std::collections::HashMap;
+use std::mem;
 use std::mem::{transmute};
 use std::sync::mpsc;
 use std::sync::mpsc::{Sender, Receiver};
@@ -161,10 +162,11 @@ impl Client {
                 }
             }));
 
-            // let user_data = transmute::<*const _, *mut c_void>(Box::into_raw(boxed));
+            debug!("Boxed box occupies {} bytes in the stack", mem::size_of_val(&boxed));
 
-            let user_data = Box::into_raw(boxed) as *const _ as *mut c_void;
-            println!("Setting callback address {:?}", user_data);
+            // let user_data = transmute::<*const _, *mut c_void>(Box::into_raw(boxed));
+            let user_data = Box::into_raw(boxed) as *mut Box<Fn(&response::GetInternal)> as *mut c_void;
+            debug!("Setting get callback address {:?}", user_data);
 
             let res = lcb_get3(self.instance, user_data, &gcmd as *const cmd::Get);
             if res != ErrorType::Success {
@@ -235,7 +237,11 @@ impl Client {
                 }
             }));
 
-            let user_data = transmute::<*const  _, *mut c_void>(Box::into_raw(boxed));
+            debug!("Boxed box occupies {} bytes in the stack", mem::size_of_val(&boxed));
+
+            // let user_data = transmute::<*const  _, *mut c_void>(Box::into_raw(boxed));
+            let user_data = Box::into_raw(boxed) as *mut Box<Fn(&response::StoreInternal)> as *mut c_void;
+            debug!("Setting store callback address {:?}", user_data);
 
             let res = lcb_store3(self.instance, user_data, &gcmd as *const cmd::Store);
             if res != ErrorType::Success {
@@ -276,10 +282,13 @@ unsafe extern "C" fn op_callback(_instance: Instance, cbtype: CallbackType, resp
             debug!("{:?}", *gresp);
 
             let cookie = (*gresp).cookie;
-            // let user_data = transmute::<*mut c_void, *const Box<Fn(&response::GetInternal)>>(cookie);
+            // let callback = transmute::<*mut c_void, *const Box<Fn(&response::GetInternal)>>(cookie);
 
             let callback = cookie as *const Box<Fn(&response::GetInternal)>;
-            println!("Got callback address {:?}", callback);
+            // let callback: Box<Box<Fn(&response::GetInternal)>> = Box::from_raw(cookie as *mut Box<Fn(&response::GetInternal)>);
+            debug!("Retreived boxed box occupies {} bytes in the stack", mem::size_of_val(&callback));
+
+            // debug!("Got get callback address {:?}", callback);
 
             (*callback)(&(*gresp));
         },
@@ -288,8 +297,15 @@ unsafe extern "C" fn op_callback(_instance: Instance, cbtype: CallbackType, resp
             debug!("{:?}", *gresp);
 
             let cookie = (*gresp).cookie;
-            let user_data = transmute::<*mut c_void, *const Box<Fn(&response::StoreInternal)>>(cookie);
-            (*user_data)(&(*gresp));
+            // let callback = transmute::<*mut c_void, *const Box<Fn(&response::StoreInternal)>>(cookie);
+
+            let callback = cookie as *const Box<Fn(&response::StoreInternal)>;
+            // let callback: Box<Box<Fn(&response::StoreInternal)>> = Box::from_raw(cookie as *mut Box<Fn(&response::StoreInternal)>);
+            debug!("Retreived boxed box occupies {} bytes in the stack", mem::size_of_val(&callback));
+
+            // debug!("Got store callback address {:?}", callback);
+
+            // (*callback)(&(*gresp));
         },
         _ => error!("! Unknown Callback...")
     };
