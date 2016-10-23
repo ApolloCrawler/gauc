@@ -32,7 +32,7 @@ fn main() {
             CStr::from_ptr(lcb_strerror(instance, res)).to_str().unwrap() // description
         );
 
-        lcb_install_callback3(instance, CallbackType::Get, Some(op_callback));
+        lcb_install_callback3(instance, CallbackType::Get, op_callback);
 
         let key = "foo";
         let ckey = CString::new(key).unwrap();
