@@ -1,10 +1,13 @@
 extern crate gauc;
+extern crate env_logger;
 
 use gauc::client::*;
 use std::{thread, time};
 
 fn main() {
-    let mut client = Client::new("couchbase://localhost/default");
+    env_logger::init().unwrap();
+
+    let mut client = Client::new("couchbase://korczis.com/default");
 
 //     println!("{:?}", client.get_sync("foo"));
 
