@@ -13,14 +13,15 @@ fn main() {
         println!("Iteration #{}", i);
 
         // Store some data
-        client.upsert("foo", "{\"msg\": \"This is test!\"}", |res| {
+        client.upsert(&format!("foo {}", i), &format!("This is test No. {}!", i), |res| {
             if let Ok(response) = res {
                 println!("Created new document, CAS: {}", response.cas)
             }
         });
-
+    }
+    for i in 0..100 {
         // Get data
-        client.get("foo", |res| {
+        client.get(&format!("foo {}", i), |res| {
             if let Ok(response) = res {
                 println!("{} - {}", response.key.unwrap(), response.value.unwrap())
             }

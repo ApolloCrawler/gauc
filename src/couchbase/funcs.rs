@@ -7,7 +7,7 @@ use super::types::error_type::ErrorType;
 use super::types::instance::Instance;
 use super::types::response;
 
-pub type ResponseCallback = Option<unsafe extern "C" fn(instance: Instance, cbtype: CallbackType, resp: *const response::Base)>;
+pub type ResponseCallback = unsafe extern "C" fn(instance: Instance, cbtype: CallbackType, resp: *const response::Base);
 
 #[link(name = "couchbase")]
 extern {

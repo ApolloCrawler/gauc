@@ -28,10 +28,9 @@ impl GetInternal {
         unsafe {
             match self.rc {
                 ErrorType::Success => {
-                    let res = CString::from_raw(self.key as *mut i8);
-                    let length = self.nkey as usize;
+                    let bytes = ::std::slice::from_raw_parts(self.key as *mut u8, self.nkey as usize);
+                    let text = ::std::str::from_utf8(bytes).unwrap();
 
-                    let text = &res.into_string().unwrap()[..length];
                     return Some(text.to_string());
                 },
                 _ => {
@@ -45,10 +44,8 @@ impl GetInternal {
         unsafe {
             match self.rc {
                 ErrorType::Success => {
-                    let res = CString::from_raw(self.value as *mut i8);
-                    let length = self.nvalue as usize;
-
-                    let text = &res.into_string().unwrap()[..length];
+                    let bytes = ::std::slice::from_raw_parts(self.key as *mut u8, self.nkey as usize);
+                    let text = ::std::str::from_utf8(bytes).unwrap();
                     return Some(text.to_string());
                 },
                 _ => {

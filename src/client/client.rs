@@ -113,8 +113,8 @@ impl Client {
                 process::exit(-1);
             }
 
-            lcb_install_callback3(instance, CallbackType::Get, Some(op_callback));
-            lcb_install_callback3(instance, CallbackType::Store, Some(op_callback));
+            lcb_install_callback3(instance, CallbackType::Get, op_callback);
+            lcb_install_callback3(instance, CallbackType::Store, op_callback);
 
             Client {
                 opts: Arc::new(Mutex::new(opts)),
@@ -145,11 +145,11 @@ impl Client {
         where F: Fn(OperationResultGet) + 'static
     {
         let mut gcmd = cmd::Get::default();
-
+        
         gcmd.key._type = KvBufferType::Copy;
-        gcmd.key.contig.bytes = key.as_bytes().as_ptr() as *const libc::c_void;
+        gcmd.key.contig.bytes = key.as_ptr() as *const libc::c_void;
         gcmd.key.contig.nbytes = key.len() as u64;
-
+        
         unsafe {
             let _id = self.operations.get.increment_counter();
 
@@ -260,6 +260,7 @@ impl Client {
             }
         }
 
+        
         return self;
     }
 
@@ -290,8 +291,8 @@ unsafe extern "C" fn op_callback(_instance: Instance, cbtype: CallbackType, resp
             let cookie = (*gresp).cookie;
             // let callback = transmute::<*mut c_void, *const Box<Fn(&response::GetInternal)>>(cookie);
 
-            let callback = cookie as *const Box<Fn(&response::GetInternal)>;
-            // let callback: Box<Box<Fn(&response::GetInternal)>> = Box::from_raw(cookie as *mut Box<Fn(&response::GetInternal)>);
+            //let callback = cookie as *const Box<Fn(&response::GetInternal)>;
+            let callback: Box<Box<Fn(&response::GetInternal)>> = Box::from_raw(cookie as *mut Box<Fn(&response::GetInternal)>);
             debug!("Retreived boxed box occupies {} bytes in the stack", mem::size_of_val(&callback));
 
             // debug!("Got get callback address {:?}", callback);
@@ -305,8 +306,8 @@ unsafe extern "C" fn op_callback(_instance: Instance, cbtype: CallbackType, resp
             let cookie = (*gresp).cookie;
             // let callback = transmute::<*mut c_void, *const Box<Fn(&response::StoreInternal)>>(cookie);
 
-            let callback = cookie as *const Box<Fn(&response::StoreInternal)>;
-            // let callback: Box<Box<Fn(&response::StoreInternal)>> = Box::from_raw(cookie as *mut Box<Fn(&response::StoreInternal)>);
+            //let callback = cookie as *const Box<Fn(&response::StoreInternal)>;
+            let callback: Box<Box<Fn(&response::StoreInternal)>> = Box::from_raw(cookie as *mut Box<Fn(&response::StoreInternal)>);
             debug!("Retreived boxed box occupies {} bytes in the stack", mem::size_of_val(&callback));
 
             // debug!("Got store callback address {:?}", callback);
