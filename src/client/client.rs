@@ -132,13 +132,9 @@ impl Client {
         return self.store(key, value, Operation::Add, callback);
     }
 
-    pub fn add_sync(&mut self, key: &str, value: &str,) -> OperationResultStore
+    pub fn add_sync(&mut self, key: &str, value: &str) -> OperationResultStore
     {
-        let (tx, rx): (Sender<OperationResultStore>, Receiver<OperationResultStore>) = mpsc::channel();
-        self.store(key, value, Operation::Add, move |result: OperationResultStore| {
-            let _ = tx.send(result);
-        });
-        return rx.recv().unwrap();
+        return self.store_sync(key, value, Operation::Add);
     }
 
     /// Rather than setting the contents of the entire document, take the value specified in value and _append_ it to the existing bytes in the value.
@@ -148,13 +144,9 @@ impl Client {
         return self.store(key, value, Operation::Append, callback);
     }
 
-    pub fn append_sync(&mut self, key: &str, value: &str,) -> OperationResultStore
+    pub fn append_sync(&mut self, key: &str, value: &str) -> OperationResultStore
     {
-        let (tx, rx): (Sender<OperationResultStore>, Receiver<OperationResultStore>) = mpsc::channel();
-        self.store(key, value, Operation::Append, move |result: OperationResultStore| {
-            let _ = tx.send(result);
-        });
-        return rx.recv().unwrap();
+        return self.store_sync(key, value, Operation::Append);
     }
 
     /// Get document from database
@@ -218,13 +210,9 @@ impl Client {
         return self.store(key, value, Operation::Prepend, callback);
     }
 
-    pub fn prepend_sync(&mut self, key: &str, value: &str,) -> OperationResultStore
+    pub fn prepend_sync(&mut self, key: &str, value: &str) -> OperationResultStore
     {
-        let (tx, rx): (Sender<OperationResultStore>, Receiver<OperationResultStore>) = mpsc::channel();
-        self.store(key, value, Operation::Prepend, move |result: OperationResultStore| {
-            let _ = tx.send(result);
-        });
-        return rx.recv().unwrap();
+        return self.store_sync(key, value, Operation::Prepend);
     }
 
     /// Will cause the operation to fail _unless_ the key already exists in the cluster.
@@ -234,13 +222,9 @@ impl Client {
         return self.store(key, value, Operation::Replace, callback);
     }
 
-    pub fn replace_sync(&mut self, key: &str, value: &str,) -> OperationResultStore
+    pub fn replace_sync(&mut self, key: &str, value: &str) -> OperationResultStore
     {
-        let (tx, rx): (Sender<OperationResultStore>, Receiver<OperationResultStore>) = mpsc::channel();
-        self.store(key, value, Operation::Replace, move |result: OperationResultStore| {
-            let _ = tx.send(result);
-        });
-        return rx.recv().unwrap();
+        return self.store_sync(key, value, Operation::Replace);
     }
 
     /// Unconditionally store the item in the cluster
@@ -250,13 +234,9 @@ impl Client {
         return self.store(key, value, Operation::Set, callback);
     }
 
-    pub fn set_sync(&mut self, key: &str, value: &str,) -> OperationResultStore
+    pub fn set_sync(&mut self, key: &str, value: &str) -> OperationResultStore
     {
-        let (tx, rx): (Sender<OperationResultStore>, Receiver<OperationResultStore>) = mpsc::channel();
-        self.store(key, value, Operation::Set, move |result: OperationResultStore| {
-            let _ = tx.send(result);
-        });
-        return rx.recv().unwrap();
+        return self.store_sync(key, value, Operation::Set);
     }
 
     /// Store document in database
@@ -305,7 +285,7 @@ impl Client {
         return self;
     }
 
-    pub fn store_sync(&mut self, key: &str, operation: Operation, value: &str,) -> OperationResultStore
+    pub fn store_sync(&mut self, key: &str, value: &str, operation: Operation) -> OperationResultStore
     {
         let (tx, rx): (Sender<OperationResultStore>, Receiver<OperationResultStore>) = mpsc::channel();
         self.store(key, value, operation, move |result: OperationResultStore| {
@@ -321,13 +301,9 @@ impl Client {
         return self.store(key, value, Operation::Upsert, callback);
     }
 
-    pub fn upsert_sync(&mut self, key: &str, value: &str,) -> OperationResultStore
+    pub fn upsert_sync(&mut self, key: &str, value: &str) -> OperationResultStore
     {
-        let (tx, rx): (Sender<OperationResultStore>, Receiver<OperationResultStore>) = mpsc::channel();
-        self.store(key, value, Operation::Upsert, move |result: OperationResultStore| {
-            let _ = tx.send(result);
-        });
-        return rx.recv().unwrap();
+        return self.store_sync(key, value, Operation::Upsert);
     }
 }
 
