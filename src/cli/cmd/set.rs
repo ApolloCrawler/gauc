@@ -6,7 +6,6 @@ pub fn cmd_set(client: &mut Client, parts: &Vec<&str>) -> bool {
     match parts.len() {
         1 | 2 => println!("Wrong number of arguments, expected key and value"),
         _ => {
-            println!("Calling client.set");
             client.set(parts[1], &format!("{}", parts[2..].join(" "))[..], store_callback);
         }
     }

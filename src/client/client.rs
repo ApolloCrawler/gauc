@@ -125,21 +125,21 @@ impl Client {
 
     ///  Will cause the operation to fail if the key already exists in the cluster.
     pub fn add<'a, F>(&'a mut self, key: &str, value: &str, callback: F) -> &Client
-        where F: Fn(OperationResultStore)
+        where F: Fn(OperationResultStore) + 'static
     {
         return self.store(key, value, Operation::Add, callback);
     }
 
     /// Rather than setting the contents of the entire document, take the value specified in value and _append_ it to the existing bytes in the value.
     pub fn append<'a, F>(&'a mut self, key: &str, value: &str, callback: F) -> &Client
-        where F: Fn(OperationResultStore)
+        where F: Fn(OperationResultStore) + 'static
     {
         return self.store(key, value, Operation::Append, callback);
     }
 
     /// Get document from database
     pub fn get<'a, F>(&'a mut self, key: &str, callback: F) -> &Client
-        where F: Fn(OperationResultGet)
+        where F: Fn(OperationResultGet) + 'static
     {
         let mut gcmd = cmd::Get::default();
 
@@ -151,11 +151,10 @@ impl Client {
             let _id = self.operations.get.increment_counter();
 
             let boxed: OperationResultGetInternalCallback = Box::new(Box::new(move |result: &response::GetInternal| {
-                println!("{:?}", result);
                 match result.rc {
-                    // ErrorType::Success => callback(Ok(response::Get::new(result))),
+                    ErrorType::Success => callback(Ok(response::Get::new(result))),
                     _ => {
-                        // callback(Err((Some(response::Get::new(result)), result.error(self.instance))));
+                        callback(Err((Some(response::Get::new(result)), "error" /* result.error(self.instance) */)));
                     }
                 }
             }));
@@ -164,11 +163,11 @@ impl Client {
 
             let res = lcb_get3(self.instance, user_data, &gcmd as *const cmd::Get);
             if res != ErrorType::Success {
-                callback(Err((None, format_error(self.instance, &res))));
+                // callback(Err((None, format_error(self.instance, &res))));
             } else {
                 let res = lcb_wait(self.instance);
                 if res != ErrorType::Success {
-                    callback(Err((None, format_error(self.instance, &res))))
+                    // callback(Err((None, format_error(self.instance, &res))))
                 }
             }
         }
@@ -178,28 +177,28 @@ impl Client {
 
     /// Like append, but prepends the new value to the existing value.
     pub fn prepend<'a, F>(&'a mut self, key: &str, value: &str, callback: F) -> &Client
-        where F: Fn(OperationResultStore)
+        where F: Fn(OperationResultStore) + 'static
     {
         return self.store(key, value, Operation::Prepend, callback);
     }
 
     /// Will cause the operation to fail _unless_ the key already exists in the cluster.
     pub fn replace<'a, F>(&'a mut self, key: &str, value: &str, callback: F) -> &Client
-        where F: Fn(OperationResultStore)
+        where F: Fn(OperationResultStore) + 'static
     {
         return self.store(key, value, Operation::Replace, callback);
     }
 
     /// Unconditionally store the item in the cluster
     pub fn set<'a, F>(&'a mut self, key: &str, value: &str, callback: F) -> &Client
-        where F: Fn(OperationResultStore)
+        where F: Fn(OperationResultStore) + 'static
     {
         return self.store(key, value, Operation::Set, callback);
     }
 
     /// Store document in database
     pub fn store<'a, F>(&'a mut self, key: &str, value: &str, operation: Operation, callback: F) -> &Client
-        where F: Fn(OperationResultStore)
+        where F: Fn(OperationResultStore) + 'static
     {
         let mut gcmd = cmd::Store::default();
         gcmd.key._type = KvBufferType::Copy;
@@ -214,11 +213,10 @@ impl Client {
             let _id = self.operations.store.increment_counter();
 
             let boxed: OperationResultStoreInternalCallback = Box::new(Box::new(move |result: &response::StoreInternal| {
-                println!("{:?}", result);
                 match result.rc {
-                    // ErrorType::Success => callback(Ok(response::Store::new(result))),
+                    ErrorType::Success => callback(Ok(response::Store::new(result))),
                     _ => {
-                        // callback(Err((Some(response::Store::new(result)), result.error(self.instance))));
+                        callback(Err((Some(response::Store::new(result)), "error" /* result.error(self.instance) */)));
                     }
                 }
             }));
@@ -227,11 +225,11 @@ impl Client {
 
             let res = lcb_store3(self.instance, user_data, &gcmd as *const cmd::Store);
             if res != ErrorType::Success {
-                callback(Err((None, format_error(self.instance, &res))))
+                // callback(Err((None, format_error(self.instance, &res))))
             } else {
                 let res = lcb_wait(self.instance);
                 if res != ErrorType::Success {
-                    callback(Err((None, format_error(self.instance, &res))))
+                    // callback(Err((None, format_error(self.instance, &res))))
                 }
             }
         }
@@ -241,7 +239,7 @@ impl Client {
 
     /// Behaviorally it is identical to set in that it will make the server unconditionally store the item, whether it exists or not.
     pub fn upsert<'a, F>(&'a mut self, key: &str, value: &str, callback: F) -> &Client
-        where F: Fn(OperationResultStore)
+        where F: Fn(OperationResultStore) + 'static
     {
         return self.store(key, value, Operation::Upsert, callback);
     }
