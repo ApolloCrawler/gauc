@@ -6,9 +6,11 @@ use gauc::client::*;
 fn main() {
     env_logger::init().unwrap();
 
+    const NUM_ITERATIONS: i32 = 100;
+
     let mut client = Client::new("couchbase://korczis.com/default");
 
-    for i in 0..100 {
+    for i in 0..NUM_ITERATIONS {
         println!("Iteration #{}", i);
 
         // Store some data
@@ -17,8 +19,7 @@ fn main() {
                 println!("Created new document, CAS: {}", response.cas)
             }
         });
-    }
-    for i in 0..100 {
+
         // Get data
         client.get(&format!("foo{}", i), |res| {
             if let Ok(response) = res {

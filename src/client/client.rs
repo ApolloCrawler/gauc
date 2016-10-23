@@ -132,11 +132,29 @@ impl Client {
         return self.store(key, value, Operation::Add, callback);
     }
 
+    pub fn add_sync(&mut self, key: &str, value: &str,) -> OperationResultStore
+    {
+        let (tx, rx): (Sender<OperationResultStore>, Receiver<OperationResultStore>) = mpsc::channel();
+        self.store(key, value, Operation::Add, move |result: OperationResultStore| {
+            let _ = tx.send(result);
+        });
+        return rx.recv().unwrap();
+    }
+
     /// Rather than setting the contents of the entire document, take the value specified in value and _append_ it to the existing bytes in the value.
     pub fn append<'a, F>(&'a mut self, key: &str, value: &str, callback: F) -> &Client
         where F: Fn(OperationResultStore) + 'static
     {
         return self.store(key, value, Operation::Append, callback);
+    }
+
+    pub fn append_sync(&mut self, key: &str, value: &str,) -> OperationResultStore
+    {
+        let (tx, rx): (Sender<OperationResultStore>, Receiver<OperationResultStore>) = mpsc::channel();
+        self.store(key, value, Operation::Append, move |result: OperationResultStore| {
+            let _ = tx.send(result);
+        });
+        return rx.recv().unwrap();
     }
 
     /// Get document from database
@@ -200,6 +218,15 @@ impl Client {
         return self.store(key, value, Operation::Prepend, callback);
     }
 
+    pub fn prepend_sync(&mut self, key: &str, value: &str,) -> OperationResultStore
+    {
+        let (tx, rx): (Sender<OperationResultStore>, Receiver<OperationResultStore>) = mpsc::channel();
+        self.store(key, value, Operation::Prepend, move |result: OperationResultStore| {
+            let _ = tx.send(result);
+        });
+        return rx.recv().unwrap();
+    }
+
     /// Will cause the operation to fail _unless_ the key already exists in the cluster.
     pub fn replace<'a, F>(&'a mut self, key: &str, value: &str, callback: F) -> &Client
         where F: Fn(OperationResultStore) + 'static
@@ -207,11 +234,29 @@ impl Client {
         return self.store(key, value, Operation::Replace, callback);
     }
 
+    pub fn replace_sync(&mut self, key: &str, value: &str,) -> OperationResultStore
+    {
+        let (tx, rx): (Sender<OperationResultStore>, Receiver<OperationResultStore>) = mpsc::channel();
+        self.store(key, value, Operation::Replace, move |result: OperationResultStore| {
+            let _ = tx.send(result);
+        });
+        return rx.recv().unwrap();
+    }
+
     /// Unconditionally store the item in the cluster
     pub fn set<'a, F>(&'a mut self, key: &str, value: &str, callback: F) -> &Client
         where F: Fn(OperationResultStore) + 'static
     {
         return self.store(key, value, Operation::Set, callback);
+    }
+
+    pub fn set_sync(&mut self, key: &str, value: &str,) -> OperationResultStore
+    {
+        let (tx, rx): (Sender<OperationResultStore>, Receiver<OperationResultStore>) = mpsc::channel();
+        self.store(key, value, Operation::Set, move |result: OperationResultStore| {
+            let _ = tx.send(result);
+        });
+        return rx.recv().unwrap();
     }
 
     /// Store document in database
@@ -260,11 +305,29 @@ impl Client {
         return self;
     }
 
+    pub fn store_sync(&mut self, key: &str, operation: Operation, value: &str,) -> OperationResultStore
+    {
+        let (tx, rx): (Sender<OperationResultStore>, Receiver<OperationResultStore>) = mpsc::channel();
+        self.store(key, value, operation, move |result: OperationResultStore| {
+            let _ = tx.send(result);
+        });
+        return rx.recv().unwrap();
+    }
+
     /// Behaviorally it is identical to set in that it will make the server unconditionally store the item, whether it exists or not.
     pub fn upsert<'a, F>(&'a mut self, key: &str, value: &str, callback: F) -> &Client
         where F: Fn(OperationResultStore) + 'static
     {
         return self.store(key, value, Operation::Upsert, callback);
+    }
+
+    pub fn upsert_sync(&mut self, key: &str, value: &str,) -> OperationResultStore
+    {
+        let (tx, rx): (Sender<OperationResultStore>, Receiver<OperationResultStore>) = mpsc::channel();
+        self.store(key, value, Operation::Upsert, move |result: OperationResultStore| {
+            let _ = tx.send(result);
+        });
+        return rx.recv().unwrap();
     }
 }
 
