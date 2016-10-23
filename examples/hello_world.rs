@@ -13,7 +13,7 @@ fn main() {
         println!("Iteration #{}", i);
 
         // Store some data
-        client.upsert(&format!("foo{}", i), &format!("This is test No. {}!", i), |res| {
+        client.upsert(&format!("foo{}", i), &format!("{{\"msg\": \"This is test No. {}!\"}}", i), |res| {
             if let Ok(response) = res {
                 println!("Created new document, CAS: {}", response.cas)
             }
