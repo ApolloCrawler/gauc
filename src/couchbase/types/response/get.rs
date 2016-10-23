@@ -44,7 +44,7 @@ impl GetInternal {
         unsafe {
             match self.rc {
                 ErrorType::Success => {
-                    let bytes = ::std::slice::from_raw_parts(self.key as *mut u8, self.nkey as usize);
+                    let bytes = ::std::slice::from_raw_parts(self.value as *mut u8, self.nvalue as usize);
                     let text = ::std::str::from_utf8(bytes).unwrap();
                     return Some(text.to_string());
                 },
