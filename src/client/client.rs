@@ -152,8 +152,6 @@ impl Client {
         gcmd.key.contig.bytes = key.as_bytes().as_ptr() as *const libc::c_void;
         gcmd.key.contig.nbytes = key.len() as u64;
 
-        forget(key);
-
         unsafe {
             let _id = self.operations.get.increment_counter();
 
@@ -185,6 +183,8 @@ impl Client {
                 }
             }
         }
+
+        forget(key);
 
         return self;
     }
@@ -234,8 +234,6 @@ impl Client {
         gcmd.value.contig.nbytes = value.len() as u64;
         gcmd.operation = operation;
 
-        forget(key);
-
         unsafe {
             let _id = self.operations.store.increment_counter();
 
@@ -267,6 +265,8 @@ impl Client {
                 }
             }
         }
+
+        forget(key);
 
         return self;
     }
