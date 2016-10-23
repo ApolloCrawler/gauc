@@ -113,8 +113,8 @@ impl Client {
                 process::exit(-1);
             }
 
-            lcb_install_callback3(instance, CallbackType::Get, Some(op_callback));
-            lcb_install_callback3(instance, CallbackType::Store, Some(op_callback));
+            lcb_install_callback3(instance, CallbackType::Get, op_callback);
+            lcb_install_callback3(instance, CallbackType::Store, op_callback);
 
             Client {
                 opts: Arc::new(Mutex::new(opts)),
