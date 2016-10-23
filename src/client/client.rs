@@ -155,7 +155,10 @@ impl Client {
 
             let boxed: OperationResultGetInternalCallback = Box::new(Box::new(move |result: &response::GetInternal| {
                 match result.rc {
-                    ErrorType::Success => callback(Ok(response::Get::new(result))),
+                    ErrorType::Success => {
+                        debug!("{:?}", result);
+                        callback(Ok(response::Get::new(result)));
+                    },
                     _ => {
                         callback(Err((Some(response::Get::new(result)), "error" /* result.error(self.instance) */)));
                     }
@@ -230,7 +233,10 @@ impl Client {
 
             let boxed: OperationResultStoreInternalCallback = Box::new(Box::new(move |result: &response::StoreInternal| {
                 match result.rc {
-                    ErrorType::Success => callback(Ok(response::Store::new(result))),
+                    ErrorType::Success => {
+                        debug!("{:?}", result);
+                        callback(Ok(response::Store::new(result)));
+                    },
                     _ => {
                         callback(Err((Some(response::Store::new(result)), "error" /* result.error(self.instance) */)));
                     }
@@ -305,7 +311,7 @@ unsafe extern "C" fn op_callback(_instance: Instance, cbtype: CallbackType, resp
 
             // debug!("Got store callback address {:?}", callback);
 
-            // (*callback)(&(*gresp));
+            (*callback)(&(*gresp));
         },
         _ => error!("! Unknown Callback...")
     };
