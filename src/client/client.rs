@@ -294,7 +294,7 @@ unsafe extern "C" fn op_callback(_instance: Instance, cbtype: CallbackType, resp
             // let callback: Box<Box<Fn(&response::GetInternal)>> = Box::from_raw(cookie as *mut Box<Fn(&response::GetInternal)>);
             debug!("Retreived boxed box occupies {} bytes in the stack", mem::size_of_val(&callback));
 
-            // debug!("Got get callback address {:?}", callback);
+            debug!("Got get callback address {:?}", callback);
 
             (*callback)(&(*gresp));
         },
@@ -309,7 +309,7 @@ unsafe extern "C" fn op_callback(_instance: Instance, cbtype: CallbackType, resp
             // let callback: Box<Box<Fn(&response::StoreInternal)>> = Box::from_raw(cookie as *mut Box<Fn(&response::StoreInternal)>);
             debug!("Retreived boxed box occupies {} bytes in the stack", mem::size_of_val(&callback));
 
-            // debug!("Got store callback address {:?}", callback);
+            debug!("Got store callback address {:?}", callback);
 
             (*callback)(&(*gresp));
         },
