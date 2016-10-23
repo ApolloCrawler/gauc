@@ -1,4 +1,3 @@
-use std::ffi::CString;
 use libc::{c_ulong, c_ulonglong, c_void};
 
 use super::super::error_type::ErrorType;

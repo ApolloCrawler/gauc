@@ -6,7 +6,7 @@ use std::ffi::CString;
 use std::{fmt, process, ptr};
 use std::collections::HashMap;
 use std::mem;
-use std::mem::{forget, transmute};
+use std::mem::{forget};
 use std::sync::mpsc;
 use std::sync::mpsc::{Sender, Receiver};
 
@@ -14,7 +14,7 @@ use std::sync::{Arc, Mutex};
 
 use super::super::couchbase::*;
 
-use super::super::couchbase::types::response::format_error;
+// use super::super::couchbase::types::response::format_error;
 
 // Gets
 pub type OperationResultGet = Result<response::Get, (Option<response::Get>, &'static str)>;
@@ -147,11 +147,11 @@ impl Client {
         let key = key.to_owned();
 
         let mut gcmd = cmd::Get::default();
-        
+
         gcmd.key._type = KvBufferType::Copy;
         gcmd.key.contig.bytes = key.as_ptr() as *const libc::c_void;
         gcmd.key.contig.nbytes = key.len() as u64;
-        
+
         unsafe {
             let _id = self.operations.get.increment_counter();
 
@@ -265,7 +265,7 @@ impl Client {
                 }
             }
         }
-        
+
         return self;
     }
 
