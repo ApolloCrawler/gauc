@@ -13,6 +13,7 @@ pub fn main(_args: &clap::ArgMatches, mut client: &mut Client) {
         match parts[0] {
             "add" => cmd::add::cmd_add(&mut client, &parts),
             "append" => cmd::append::cmd_append(&mut client, &parts),
+            "delete | remove" => cmd::remove::cmd_remove(&mut client, &parts),
             "exit" | "quit" => cmd::exit::cmd_exit(),
             "get" => cmd::get::cmd_get(&mut client, &parts),
             "info" => cmd::info::cmd_info(&mut client),

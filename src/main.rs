@@ -1,7 +1,11 @@
+#[macro_use]
+extern crate log;
+extern crate env_logger;
+
 extern crate clap;
 extern crate ctrlc;
-extern crate env_logger;
 extern crate gauc;
+extern crate iron;
 
 use clap::{App, Arg};
 
@@ -13,6 +17,9 @@ use std::env;
 use std::process::exit;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::mpsc::{Sender, Receiver};
+use std::sync::mpsc;
+use std::thread;
 
 const DESCRIPTION: &'static str = "Couchbase Rust Adapter / CLI / REST Interface";
 const VERSION: &'static str = env!("CARGO_PKG_VERSION");
@@ -31,7 +38,7 @@ fn install_ctrl_c_handler() {
     });
 }
 
-///
+/// Web Server Entrypoint
 fn main() {
     install_ctrl_c_handler();
 
@@ -78,13 +85,39 @@ fn main() {
 
     env_logger::init().unwrap();
 
-    let mut client = Client::new(matches.value_of("url").unwrap());
-
-    if matches.is_present("rest") {
-        web::start_web(&matches, &mut client);
+    if matches.is_present("interactive") {
+        let mut client = Client::new(matches.value_of("url").unwrap());
+        cli::main(&matches, &mut client);
     }
 
-    if matches.is_present("interactive") {
-        cli::main(&matches, &mut client);
+    let url: String = matches.value_of("url").unwrap().clone().to_string();
+    let port: u16 = matches.value_of("rest-port").unwrap().to_string().parse::<u16>().unwrap();
+    if matches.is_present("rest") {
+        let (tx, rx): (Sender<web::IronRequest>, Receiver<web::IronRequest>) = mpsc::channel();
+        let shared_tx = std::sync::Arc::new(std::sync::Mutex::new(tx));
+
+        println!("Talking to couchbase {:?}", url);
+        let t = thread::spawn(move || {
+            let mut client = Client::new(&url[..]);
+            loop {
+                let msg = rx.recv();
+                debug!("Received {:?}", msg);
+                match msg {
+                    Ok(unwrapped_msg) => {
+                        let doc = client.get_sync("foo");
+
+                        let msg_res = web::IronResponse {
+                            data: doc.unwrap().value.unwrap()
+                        };
+
+                        let _ = unwrapped_msg.tx.lock().unwrap().send(msg_res);
+                    },
+                    Err(_) => {}
+                };
+            }
+        });
+
+        web::start_web(port, shared_tx.clone());
+        let _ = t.join();
     }
 }
