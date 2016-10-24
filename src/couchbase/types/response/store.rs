@@ -7,7 +7,7 @@ use super::super::instance::Instance;
 use super::format_error;
 
 #[repr(C)]
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct StoreInternal {
     pub cookie: *mut c_void,
     pub key: *const c_void,

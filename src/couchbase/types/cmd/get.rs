@@ -3,7 +3,7 @@ use libc::{c_int};
 use super::super::key_buffer::KeyBuffer;
 
 #[repr(C)]
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct Get {
     pub cmdflags: u32,
     pub exptime: u32,

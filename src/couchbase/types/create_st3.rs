@@ -3,7 +3,7 @@ use libc::{c_char, c_void};
 use super::handle_type::HandleType;
 
 #[repr(C)]
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct CreateSt3 {
     pub connstr: *const c_char,
     pub username: *const c_char,

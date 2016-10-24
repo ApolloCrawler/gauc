@@ -3,7 +3,7 @@ use libc::{c_ulong, c_ulonglong, c_void};
 use super::super::error_type::ErrorType;
 
 #[repr(C)]
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct Base {
     pub cookie: *mut c_void,
     pub key: *const c_void,

@@ -3,7 +3,7 @@ use libc::{c_int};
 use super::create_st3::CreateSt3;
 
 #[repr(C)]
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct CreateSt {
     version: c_int,
     pub v3: CreateSt3,

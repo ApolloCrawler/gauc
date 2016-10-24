@@ -3,7 +3,7 @@ use super::super::key_buffer::KeyBuffer;
 use super::super::operation::Operation;
 
 #[repr(C)]
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct Store {
     pub cmdflags: u32,
     pub exptime: u32,

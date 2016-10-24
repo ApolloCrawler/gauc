@@ -1,5 +1,5 @@
 #[repr(u32)]
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum KvBufferType {
     Copy = 0,
     Contig = 1,
