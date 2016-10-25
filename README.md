@@ -2,7 +2,7 @@
 
 ***Couchbase Rust Adapter / CLI***
 
-*Why gauc? "gauc" is czech slang term for couch.*
+*Why gauc? "[gauc](https://en.wiktionary.org/wiki/gau%C4%8D)" is czech slang term for couch.*
 
 This project was originaly inspired by [couchbase-rs](https://github.com/daschl/couchbase-rs)
 
