@@ -6,3 +6,6 @@ pub struct ContiguousBuffer {
     pub bytes: *const c_void,
     pub nbytes: c_ulong,
 }
+
+unsafe impl Send for ContiguousBuffer {}
+unsafe impl Sync for ContiguousBuffer {}

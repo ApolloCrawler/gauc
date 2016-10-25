@@ -13,6 +13,9 @@ pub struct CreateSt3 {
     pub _type: HandleType,
 }
 
+unsafe impl Send for CreateSt3 {}
+unsafe impl Sync for CreateSt3 {}
+
 impl Default for CreateSt3 {
     fn default() -> Self {
         unsafe { ::std::mem::zeroed() }

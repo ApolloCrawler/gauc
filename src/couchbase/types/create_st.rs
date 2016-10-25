@@ -9,6 +9,9 @@ pub struct CreateSt {
     pub v3: CreateSt3,
 }
 
+unsafe impl Send for CreateSt {}
+unsafe impl Sync for CreateSt {}
+
 impl Default for CreateSt {
     fn default() -> Self {
         CreateSt {

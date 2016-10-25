@@ -1,8 +1,8 @@
 use std::ffi::CStr;
 use std::fmt;
-use std::ptr;
 
 use super::super::funcs::lcb_strerror;
+use super::instance::Instance;
 
 #[repr(u32)]
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -93,7 +93,7 @@ pub enum ErrorType {
 impl fmt::Display for ErrorType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let description = unsafe {
-            CStr::from_ptr(lcb_strerror(ptr::null_mut(), *self)).to_str().unwrap()
+            CStr::from_ptr(lcb_strerror(Instance::default(), *self)).to_str().unwrap()
         };
         write!(f,"{} ({:?})", description, self)
     }

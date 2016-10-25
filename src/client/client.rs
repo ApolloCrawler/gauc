@@ -3,7 +3,7 @@ extern crate libc;
 use libc::{c_void};
 use std::ffi::CStr;
 use std::ffi::CString;
-use std::{fmt, process, ptr};
+use std::{fmt, process};
 use std::collections::HashMap;
 use std::mem::{forget};
 use std::sync::mpsc;
@@ -83,7 +83,7 @@ impl Client {
         let mut opts = CreateSt::default();
         opts.v3.connstr = connstr.as_ptr();
 
-        let mut instance: Instance = ptr::null_mut();
+        let mut instance: Instance = Instance::default();
 
         unsafe {
             let res = lcb_create(&mut instance as *mut Instance, &opts as *const CreateSt);
