@@ -13,7 +13,7 @@ use std::sync::mpsc::{Sender, Receiver};
 use std::sync::mpsc;
 
 // use std::ptr::Unique;
-// use super::client::Client;
+use super::client::Client;
 
 // Bucket REST Interface
 //
@@ -50,12 +50,12 @@ pub fn start_web(port: u16, tx: Arc<Mutex<Sender<IronRequest>>>) {
 
     let mut router = Router::new();
 
-    // let c = Client::new("couchbase://localhost/default");
+    let c = Client::new("couchbase://localhost/default");
 
     let get_handler = move |req: &mut Request| -> IronResult<Response> {
         debug!("{:?}", req);
 
-        // let _ = shared_c.lock().unwrap().get_sync("foo");
+        // let _ = c.get_sync("foo");
 
         let (client_tx, client_rx): (Sender<IronResponse>, Receiver<IronResponse>) = mpsc::channel();
         let shared_client_tx = Arc::new(Mutex::new(client_tx));

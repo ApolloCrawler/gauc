@@ -3,7 +3,7 @@ extern crate libc;
 use libc::{c_void};
 use std::ffi::CStr;
 use std::ffi::CString;
-use std::{fmt, process, ptr};
+use std::{fmt, process};
 use std::collections::HashMap;
 use std::mem::{forget};
 use std::sync::mpsc;
@@ -70,7 +70,7 @@ impl CouchbaseOperations {
 #[derive(Debug)]
 pub struct Client {
     pub opts: Arc<Mutex<CreateSt>>,
-    pub instance: Instance,
+    pub instance: Arc<Mutex<Instance>>,
     pub uri: String,
     pub operations: CouchbaseOperations
 }
@@ -83,7 +83,7 @@ impl Client {
         let mut opts = CreateSt::default();
         opts.v3.connstr = connstr.as_ptr();
 
-        let mut instance: Instance = ptr::null_mut();
+        let mut instance: Instance = Instance::default();
 
         unsafe {
             let res = lcb_create(&mut instance as *mut Instance, &opts as *const CreateSt);
@@ -117,7 +117,7 @@ impl Client {
 
             Client {
                 opts: Arc::new(Mutex::new(opts)),
-                instance: instance,
+                instance: Arc::new(Mutex::new(instance)),
                 uri: uri.to_string(),
                 operations: CouchbaseOperations::new()
 
@@ -164,6 +164,8 @@ impl Client {
         unsafe {
             let _id = self.operations.get.increment_counter();
 
+            let instance = self.instance.lock().unwrap();
+
             let boxed: OperationResultGetInternalCallback = Box::new(Box::new(move |result: &response::GetInternal| {
                 match result.rc {
                     ErrorType::Success => {
@@ -171,20 +173,20 @@ impl Client {
                         callback(Ok(response::Get::new(result)));
                     },
                     _ => {
-                        callback(Err((Some(response::Get::new(result)), "error" /* result.error(self.instance) */)));
+                        callback(Err((Some(response::Get::new(result)), "error" /* result.error(*instance) */)));
                     }
                 }
             }));
 
             let user_data = Box::into_raw(boxed) as *mut Box<Fn(&response::GetInternal)> as *mut c_void;
 
-            let res = lcb_get3(self.instance, user_data, &gcmd as *const cmd::Get);
+            let res = lcb_get3(*instance, user_data, &gcmd as *const cmd::Get);
             if res != ErrorType::Success {
-                // callback(Err((None, format_error(self.instance, &res))));
+                // callback(Err((None, format_error(*instance, &res))));
             } else {
-                let res = lcb_wait(self.instance);
+                let res = lcb_wait(*instance);
                 if res != ErrorType::Success {
-                    // callback(Err((None, format_error(self.instance, &res))))
+                    // callback(Err((None, format_error(*instance, &res))))
                 }
             }
         }
@@ -271,13 +273,14 @@ impl Client {
 
             let user_data = Box::into_raw(boxed) as *mut Box<Fn(&response::StoreInternal)> as *mut c_void;
 
-            let res = lcb_store3(self.instance, user_data, &gcmd as *const cmd::Store);
+            let instance = self.instance.lock().unwrap();
+            let res = lcb_store3(*instance, user_data, &gcmd as *const cmd::Store);
             if res != ErrorType::Success {
-                // callback(Err((None, format_error(self.instance, &res))))
+                // callback(Err((None, format_error(instance, &res))))
             } else {
-                let res = lcb_wait(self.instance);
+                let res = lcb_wait(*instance);
                 if res != ErrorType::Success {
-                    // callback(Err((None, format_error(self.instance, &res))))
+                    // callback(Err((None, format_error(instance, &res))))
                 }
             }
         }
@@ -311,7 +314,8 @@ impl Drop for Client {
     fn drop(&mut self) {
         unsafe {
             info!("Disconnecting from {}", self.uri);
-            lcb_destroy(self.instance);
+            let instance = self.instance.lock().unwrap();
+            lcb_destroy(*instance);
         }
     }
 }

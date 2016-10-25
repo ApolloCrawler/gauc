@@ -1,7 +1,7 @@
 use super::super::key_buffer::KeyBuffer;
 
 #[repr(C)]
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct Base {
     pub cmdflags: u32,
     pub exptime: u32,

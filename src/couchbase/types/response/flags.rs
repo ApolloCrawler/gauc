@@ -1,5 +1,5 @@
 #[repr(u32)]
-#[derive(Debug,Clone,Copy)]
+#[derive(Debug, Clone, Copy)]
 pub enum Flags {
     Final = 1,
     Clientgen = 2,

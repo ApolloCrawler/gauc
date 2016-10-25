@@ -1,5 +1,5 @@
 #[repr(u32)]
-#[derive(Debug,Clone,Copy)]
+#[derive(Debug, Clone, Copy)]
 pub enum Operation {
     /**
      * The default storage mode. This constant was added in version 2.6.2 for

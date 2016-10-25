@@ -6,7 +6,6 @@ use gauc::couchbase::*;
 
 use std::ffi::CStr;
 use std::ffi::CString;
-use std::ptr;
 
 fn main() {
    let connstr = CString::new("couchbase://localhost/default").unwrap();
@@ -14,7 +13,7 @@ fn main() {
     let mut cropts = CreateSt::default();
     cropts.v3.connstr = connstr.as_ptr();
 
-    let mut instance: Instance = ptr::null_mut();
+    let mut instance: Instance = Instance::default();
     unsafe {
         let res = lcb_create(&mut instance as *mut Instance, &cropts as *const CreateSt);
         println!("Create Res: {:?}", res);
