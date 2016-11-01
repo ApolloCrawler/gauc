@@ -4,6 +4,7 @@ extern crate router;
 
 mod handler;
 
+use iron::mime;
 use iron::prelude::*;
 use iron::status;
 use router::Router;
@@ -45,9 +46,20 @@ pub fn start_web(port: u16) {
     let get_handler = move |req: &mut Request| -> IronResult<Response> {
         let ref docid = req.extensions.get::<Router>().unwrap().find("docid").unwrap_or("");
         let mut client = handler_client.lock().unwrap();
+
         match client.get_sync(docid) {
-            Ok(result) => Ok(Response::with((status::Ok, format!("{}\n", result.value.unwrap())))),
-            Err(res) => Ok(Response::with((status::BadRequest, response::format_error(*client.instance.as_ref().unwrap().lock().unwrap(), &res.0.unwrap().rc ))))
+            Ok(result) => {
+                let content_type = mime::Mime(iron::mime::TopLevel::Application, iron::mime::SubLevel::Json, vec![]);
+                Ok(Response::with((content_type, status::Ok, format!("{}\n", result.value.unwrap()))))
+            },
+            Err(res) => {
+                Ok(
+                    Response::with((status::BadRequest, response::format_error(
+                        *client.instance.as_ref().unwrap().lock().unwrap(),
+                        &res.0.unwrap().rc ))
+                    )
+                )
+            }
         }
     };
 
