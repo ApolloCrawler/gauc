@@ -9,11 +9,10 @@ use iron::status;
 use router::Router;
 
 use std::sync::{Arc, Mutex};
-use std::sync::mpsc::{Sender, Receiver};
-use std::sync::mpsc;
 
 // use std::ptr::Unique;
 use super::client::Client;
+use super::couchbase::types::response;
 
 // Bucket REST Interface
 //
@@ -30,57 +29,46 @@ use super::client::Client;
 // POST    /bucket/<BUCKET_NAME>/doc/<ID>/set        - set *
 // POST    /bucket/<BUCKET_NAME>/doc/<ID>/upsert     - upsert (explitcit) *
 
-#[derive(Debug)]
-pub struct IronResponse {
-    pub data: String
-}
-
-#[derive(Debug)]
-pub struct IronRequest {
-    pub url: iron::Url,
-    pub method: iron::method::Method,
-    pub tx: Arc<Mutex<Sender<IronResponse>>>
-}
-
 #[allow(unused_mut)]
 #[allow(unused_must_use)]
 #[allow(unused_variables)]
-pub fn start_web(port: u16, tx: Arc<Mutex<Sender<IronRequest>>>) {
+pub fn start_web(port: u16) {
     println!("Starting REST Interface on port {}.", port);
 
     let mut router = Router::new();
 
-    let c = Client::new("couchbase://localhost/default");
+    let mut c = Arc::new(Mutex::new(Client::new()));
+    c.lock().unwrap().connect("couchbase://localhost/default");
 
+    // Get handler
+    let handler_client = Arc::new(Mutex::new(c.lock().unwrap().clone()));
     let get_handler = move |req: &mut Request| -> IronResult<Response> {
-        debug!("{:?}", req);
+        let ref docid = req.extensions.get::<Router>().unwrap().find("docid").unwrap_or("");
+        let mut client = handler_client.lock().unwrap();
+        match client.get_sync(docid) {
+            Ok(result) => Ok(Response::with((status::Ok, format!("{}\n", result.value.unwrap())))),
+            Err(res) => Ok(Response::with((status::BadRequest, response::format_error(*client.instance.as_ref().unwrap().lock().unwrap(), &res.0.unwrap().rc ))))
+        }
+    };
 
-        // let _ = c.get_sync("foo");
-
-        let (client_tx, client_rx): (Sender<IronResponse>, Receiver<IronResponse>) = mpsc::channel();
-        let shared_client_tx = Arc::new(Mutex::new(client_tx));
-
-        let msg = IronRequest {
-            url: req.url.clone(),
-            method: req.method.clone(),
-            tx: shared_client_tx.clone()
-        };
-
-        tx.lock().unwrap().send(msg);
-        let res = client_rx.recv();
-        Ok(Response::with((status::Ok, &res.unwrap().data[..])))
+    // Upsert handler
+    let handler_client = Arc::new(Mutex::new(c.lock().unwrap().clone()));
+    let replace_handler = move |req: &mut Request| -> IronResult<Response> {
+        let res = c.lock().unwrap().clone().upsert_sync("abc", "def");
+        Ok(Response::with((status::Ok, "")))
     };
 
     router.get("/bucket/:bucketid/doc/:docid", get_handler, "doc_get");
+
 //    router.get("/bucket/:bucketid/doc/:docid", doc::get::get_handler, "doc_get");
 //    router.delete("/bucket/:bucketid/doc/:docid", doc::delete::delete_handler, "doc_delete");
 //    router.post("/bucket/:bucketid/doc/:docid", doc::upsert::upsert_handler, "doc_insert");
 //    router.post("/bucket/:bucketid/doc/:docid/add", doc::add::add_handler, "doc_add");
 //    router.post("/bucket/:bucketid/doc/:docid/append", doc::append::append_handler, "doc_append");
 //    router.post("/bucket/:bucketid/doc/:docid/prepend", doc::prepend::prepend_handler, "doc_prepend");
-//    router.post("/bucket/:bucketid/doc/:docid/replace", doc::replace::replace_handler, "doc_replace");
-//    router.post("/bucket/:bucketid/doc/:docid/set", doc::set::set_handler, "doc_set");
-//    router.post("/bucket/:bucketid/doc/:docid/upsert", doc::upsert::upsert_handler, "doc_upsert");
+    router.post("/bucket/:bucketid/doc/:docid/replace", replace_handler, "doc_replace");
+//    router.post("/bucket/:bucketid/doc/:docid/set", set_handler , "doc_set");
+//    router.post("/bucket/:bucketid/doc/:docid/upsert", upsert_handler, "doc_upsert");
 
     let address = format!("localhost:{}", port);
     Iron::new(router).http(&address[..]).unwrap();

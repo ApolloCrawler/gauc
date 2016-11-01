@@ -8,8 +8,9 @@ const DEFAULT_CONNECTION_STRING: &'static str = "couchbase://localhost/default";
 
 #[test]
 fn it_connects() {
-    let client = Client::new(DEFAULT_CONNECTION_STRING);
-    assert!(client.opts.lock().unwrap().version() == 3);
+    let mut client = Client::new();
+    client.connect(DEFAULT_CONNECTION_STRING);
+    assert!(client.opts.as_ref().unwrap().lock().unwrap().version() == 3);
 }
 
 #[test]
@@ -27,7 +28,8 @@ fn it_fails_when_getting_nonexisting_document() {
 
 #[test]
 fn it_stores_document() {
-    let mut client = Client::new(DEFAULT_CONNECTION_STRING);
+    let mut client = Client::new();
+    client.connect(DEFAULT_CONNECTION_STRING);
 
     // Store some data
     client.store("foo", "{\"msg\": \"This is test!\"}", Operation::Upsert, |res| {
