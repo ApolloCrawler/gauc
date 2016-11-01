@@ -22,42 +22,41 @@ This project was originaly inspired by [couchbase-rs](https://github.com/daschl/
 
 ### High Level Client Functions
 
-- add
-- append
-- get
-- prepend
-- replace
-- set
-- store
-- upsert
+- [x] add
+- [x] append
+- [x] get
+- [x] prepend
+- [x] replace
+- [x] set
+- [x] store
+- [x] upsert
 
 ### Wrapped functions
 
-- lcb_connect
-- lcb_create
-- lcb_destroy
-- lcb_get3
-- lcb_get_bootstrap_status
-- lcb_install_callback3
-- lcb_store3
-- lcb_strerror
-- lcb_wait
+- [x] lcb_connect
+- [x] lcb_create
+- [x] lcb_destroy
+- [x] lcb_get3
+- [x] lcb_get_bootstrap_status
+- [x] lcb_install_callback3
+- [x] lcb_store3
+- [x] lcb_strerror
+- [x] lcb_wait
 
 ### REST Interface
 
 #### Bucket REST Interface
 
-```
-DELETE  /bucket/<BUCKET_NAME>/doc/<ID>            - delete
-GET     /bucket/<BUCKET_NAME>/doc/<ID>            - get
-POST    /bucket/<BUCKET_NAME>/doc/<ID>            - upsert
-POST    /bucket/<BUCKET_NAME>/doc/<ID>/add        - add
-POST    /bucket/<BUCKET_NAME>/doc/<ID>/append     - append
-POST    /bucket/<BUCKET_NAME>/doc/<ID>/prepend    - prepend
-POST    /bucket/<BUCKET_NAME>/doc/<ID>/replace    - replace
-POST    /bucket/<BUCKET_NAME>/doc/<ID>/set        - set
-POST    /bucket/<BUCKET_NAME>/doc/<ID>/upsert     - upsert (explitcit)
-```
+- [ ] `DELETE  /bucket/<BUCKET_NAME>/doc/<ID>            - delete`
+- [x] `GET     /bucket/<BUCKET_NAME>/doc/<ID>            - get`
+- [ ] `POST    /bucket/<BUCKET_NAME>/doc/<ID>            - upsert`
+- [ ] `POST    /bucket/<BUCKET_NAME>/doc/<ID>/add        - add`
+- [ ] `POST    /bucket/<BUCKET_NAME>/doc/<ID>/append     - append`
+- [ ] `POST    /bucket/<BUCKET_NAME>/doc/<ID>/prepend    - prepend`
+- [ ] `POST    /bucket/<BUCKET_NAME>/doc/<ID>/replace    - replace`
+- [ ] `POST    /bucket/<BUCKET_NAME>/doc/<ID>/set        - set`
+- [ ] `POST    /bucket/<BUCKET_NAME>/doc/<ID>/upsert     - upsert (explitcit)`
+
 
 ## Getting started
 
