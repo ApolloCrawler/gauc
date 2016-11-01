@@ -3,8 +3,7 @@ extern crate libc;
 use libc::{c_void};
 use std::ffi::CStr;
 use std::ffi::CString;
-use std::{fmt, process};
-use std::collections::HashMap;
+use std::{process};
 use std::mem::{forget};
 use std::sync::mpsc;
 use std::sync::mpsc::{Sender, Receiver};
@@ -12,8 +11,6 @@ use std::sync::mpsc::{Sender, Receiver};
 use std::sync::{Arc, Mutex};
 
 use super::super::couchbase::*;
-
-// use super::super::couchbase::types::response::format_error;
 
 // Gets
 pub type OperationResultGet = Result<response::Get, (Option<response::Get>, &'static str)>;
@@ -27,57 +24,24 @@ pub type OperationResultStoreCallback = Box<Box<Fn(&response::Store)>>;
 pub type OperationResultStoreInternal<'a> = Result<&'a response::StoreInternal, (Option<&'a response::StoreInternal>, &'static str)>;
 pub type OperationResultStoreInternalCallback = Box<Box<Fn(&response::StoreInternal)>>;
 
-pub struct CouchbaseOperation<T> {
-    counter: u64,
-    map: HashMap<u64, T>
-}
-
-impl<T> fmt::Debug for CouchbaseOperation<T> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "CouchbaseOperation {{ counter: {}, length: {} }}", self.counter, self.map.len())
-    }
-}
-
-impl<T> CouchbaseOperation<T> {
-    pub fn new() -> CouchbaseOperation<T> {
-        CouchbaseOperation {
-            counter: 0,
-            map: HashMap::new()
-        }
-    }
-
-    pub fn increment_counter(&mut self) -> u64 {
-        self.counter += 1;
-        return self.counter;
-    }
-}
-
-#[derive(Debug)]
-pub struct CouchbaseOperations {
-    get: CouchbaseOperation<cmd::Get>,
-    store: CouchbaseOperation<cmd::Get>,
-}
-
-impl CouchbaseOperations {
-    pub fn new() -> CouchbaseOperations {
-        CouchbaseOperations {
-            get: CouchbaseOperation::new(),
-            store: CouchbaseOperation::new()
-        }
-    }
-}
-
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Client {
-    pub opts: Arc<Mutex<CreateSt>>,
-    pub instance: Arc<Mutex<Instance>>,
-    pub uri: String,
-    pub operations: CouchbaseOperations
+    pub opts: Option<Arc<Mutex<CreateSt>>>,
+    pub instance: Option<Arc<Mutex<Instance>>>,
+    pub uri: Option<String>
 }
 
 impl Client {
+    pub fn new() -> Client {
+        Client {
+            opts: None,
+            instance: None,
+            uri: None
+        }
+    }
+
     /// Constructor
-    pub fn new(uri: &str) -> Client {
+    pub fn connect(&mut self, uri: &str) {
         let connstr = CString::new(uri).unwrap();
 
         let mut opts = CreateSt::default();
@@ -115,13 +79,10 @@ impl Client {
             lcb_install_callback3(instance, CallbackType::Get, op_callback);
             lcb_install_callback3(instance, CallbackType::Store, op_callback);
 
-            Client {
-                opts: Arc::new(Mutex::new(opts)),
-                instance: Arc::new(Mutex::new(instance)),
-                uri: uri.to_string(),
-                operations: CouchbaseOperations::new()
+            self.opts = Some(Arc::new(Mutex::new(opts)));
+            self.instance = Some(Arc::new(Mutex::new(instance)));
+            self.uri = Some(uri.to_string());
 
-            }
         }
     }
 
@@ -162,9 +123,7 @@ impl Client {
         gcmd.key.contig.nbytes = key.len() as u64;
 
         unsafe {
-            let _id = self.operations.get.increment_counter();
-
-            let instance = self.instance.lock().unwrap();
+            let instance = self.instance.as_ref().unwrap().lock().unwrap();
 
             let boxed: OperationResultGetInternalCallback = Box::new(Box::new(move |result: &response::GetInternal| {
                 match result.rc {
@@ -257,8 +216,6 @@ impl Client {
         gcmd.operation = operation;
 
         unsafe {
-            let _id = self.operations.store.increment_counter();
-
             let boxed: OperationResultStoreInternalCallback = Box::new(Box::new(move |result: &response::StoreInternal| {
                 match result.rc {
                     ErrorType::Success => {
@@ -273,7 +230,7 @@ impl Client {
 
             let user_data = Box::into_raw(boxed) as *mut Box<Fn(&response::StoreInternal)> as *mut c_void;
 
-            let instance = self.instance.lock().unwrap();
+            let instance = self.instance.as_ref().unwrap().lock().unwrap();
             let res = lcb_store3(*instance, user_data, &gcmd as *const cmd::Store);
             if res != ErrorType::Success {
                 // callback(Err((None, format_error(instance, &res))))
@@ -310,11 +267,15 @@ impl Client {
     }
 }
 
+//impl Clone for Client {
+//
+//}
+
 impl Drop for Client {
     fn drop(&mut self) {
         unsafe {
-            info!("Disconnecting from {}", self.uri);
-            let instance = self.instance.lock().unwrap();
+            info!("Disconnecting from {}", self.uri.as_ref().unwrap());
+            let instance = self.instance.as_ref().unwrap().lock().unwrap();
             lcb_destroy(*instance);
         }
     }

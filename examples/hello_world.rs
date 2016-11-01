@@ -8,7 +8,8 @@ fn main() {
 
     const NUM_ITERATIONS: i32 = 100;
 
-    let mut client = Client::new("couchbase://korczis.com/default");
+    let mut client = Client::new();
+    client.connect("couchbase://korczis.com/default");
 
     for i in 0..NUM_ITERATIONS {
         println!("Iteration #{}", i);
