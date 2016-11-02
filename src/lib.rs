@@ -2,6 +2,7 @@
 extern crate log;
 extern crate env_logger;
 
+extern crate hyper;
 extern crate iron;
 extern crate libc;
 extern crate router;

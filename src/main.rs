@@ -15,7 +15,7 @@ use gauc::client::Client;
 
 use std::env;
 use std::process::exit;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicBool, Ordering};
 
 const DESCRIPTION: &'static str = "Couchbase Rust Adapter / CLI / REST Interface";
@@ -90,6 +90,8 @@ fn main() {
 
     let port: u16 = matches.value_of("rest-port").unwrap().to_string().parse::<u16>().unwrap();
     if matches.is_present("rest") {
-        web::start_web(port);
+        let client = Arc::new(Mutex::new(Client::new()));
+        client.lock().unwrap().connect(matches.value_of("url").unwrap());
+        web::start_web(&client, port);
     }
 }

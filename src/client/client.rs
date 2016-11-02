@@ -32,6 +32,7 @@ pub struct Client {
 }
 
 impl Client {
+    /// Constructor
     pub fn new() -> Client {
         Client {
             opts: None,
@@ -40,7 +41,6 @@ impl Client {
         }
     }
 
-    /// Constructor
     pub fn connect(&mut self, uri: &str) {
         let connstr = CString::new(uri).unwrap();
 
@@ -274,9 +274,14 @@ impl Client {
 impl Drop for Client {
     fn drop(&mut self) {
         unsafe {
-            info!("Disconnecting from {}", self.uri.as_ref().unwrap());
-            let instance = self.instance.as_ref().unwrap().lock().unwrap();
-            lcb_destroy(*instance);
+            match self.uri.as_ref() {
+                Some(uri) => {
+                    info!("Disconnecting from {}", uri);
+                    let instance = self.instance.as_ref().unwrap().lock().unwrap();
+                    lcb_destroy(*instance);
+                },
+                None => {}
+            }
         }
     }
 }
