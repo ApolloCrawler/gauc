@@ -49,13 +49,13 @@ This project was originaly inspired by [couchbase-rs](https://github.com/daschl/
 
 - [ ] `DELETE  /bucket/<BUCKET_NAME>/doc/<ID>            - delete`
 - [x] `GET     /bucket/<BUCKET_NAME>/doc/<ID>            - get`
-- [ ] `POST    /bucket/<BUCKET_NAME>/doc/<ID>            - upsert`
-- [ ] `POST    /bucket/<BUCKET_NAME>/doc/<ID>/add        - add`
-- [ ] `POST    /bucket/<BUCKET_NAME>/doc/<ID>/append     - append`
-- [ ] `POST    /bucket/<BUCKET_NAME>/doc/<ID>/prepend    - prepend`
-- [ ] `POST    /bucket/<BUCKET_NAME>/doc/<ID>/replace    - replace`
-- [ ] `POST    /bucket/<BUCKET_NAME>/doc/<ID>/set        - set`
-- [ ] `POST    /bucket/<BUCKET_NAME>/doc/<ID>/upsert     - upsert (explitcit)`
+- [x] `POST    /bucket/<BUCKET_NAME>/doc/<ID>            - upsert`
+- [x] `POST    /bucket/<BUCKET_NAME>/doc/<ID>/add        - add`
+- [x] `POST    /bucket/<BUCKET_NAME>/doc/<ID>/append     - append`
+- [x] `POST    /bucket/<BUCKET_NAME>/doc/<ID>/prepend    - prepend`
+- [x] `POST    /bucket/<BUCKET_NAME>/doc/<ID>/replace    - replace`
+- [x] `POST    /bucket/<BUCKET_NAME>/doc/<ID>/set        - set`
+- [x] `POST    /bucket/<BUCKET_NAME>/doc/<ID>/upsert     - upsert (explitcit)`
 
 
 ## Getting started
