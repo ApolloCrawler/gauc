@@ -13,6 +13,7 @@ use std::io::Read;
 use std::sync::{Arc, Mutex};
 
 // use std::ptr::Unique;
+use super::client;
 use super::client::Client;
 use super::couchbase::types::response;
 
@@ -30,6 +31,13 @@ use super::couchbase::types::response;
 // POST    /bucket/<BUCKET_NAME>/doc/<ID>/replace    - replace *
 // POST    /bucket/<BUCKET_NAME>/doc/<ID>/set        - set *
 // POST    /bucket/<BUCKET_NAME>/doc/<ID>/upsert     - upsert (explitcit) *
+
+
+pub fn response_handler(client: &mut Client, req: &mut Request) {
+    match 1 {
+        _ => {}
+    }
+}
 
 #[allow(unused_mut)]
 #[allow(unused_must_use)]
@@ -201,7 +209,10 @@ pub fn start_web(port: u16) {
     };
 
     router.get("/bucket/:bucketid/doc/:docid", get_handler, "doc_get");
+
+//    See https://github.com/ApolloCrawler/gauc/issues/4
 //    router.delete("/bucket/:bucketid/doc/:docid", doc::delete::delete_handler, "doc_delete");
+
     router.post("/bucket/:bucketid/doc/:docid", create_handler, "doc_insert");
     router.post("/bucket/:bucketid/doc/:docid/add", add_handler, "doc_add");
     router.post("/bucket/:bucketid/doc/:docid/append", append_handler, "doc_append");
