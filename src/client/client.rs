@@ -24,12 +24,27 @@ pub type OperationResultStoreCallback = Box<Box<Fn(&response::Store)>>;
 pub type OperationResultStoreInternal<'a> = Result<&'a response::StoreInternal, (Option<&'a response::StoreInternal>, &'static str)>;
 pub type OperationResultStoreInternalCallback = Box<Box<Fn(&response::StoreInternal)>>;
 
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct Client {
     pub opts: Option<Arc<Mutex<CreateSt>>>,
     pub instance: Option<Arc<Mutex<Instance>>>,
     pub uri: Option<String>
 }
+
+impl Clone for Client {
+    fn clone(&self) -> Client {
+        let mut client = Client {
+            opts: None,
+            instance: None,
+            uri: None
+        };
+
+        let uri = &self.uri.as_ref().unwrap().clone()[..];
+        client.connect(uri);
+        return client;
+    }
+}
+
 
 impl Client {
     /// Constructor

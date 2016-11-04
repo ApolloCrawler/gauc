@@ -21,6 +21,10 @@ use std::sync::atomic::{AtomicBool, Ordering};
 const DESCRIPTION: &'static str = "Couchbase Rust Adapter / CLI / REST Interface";
 const VERSION: &'static str = env!("CARGO_PKG_VERSION");
 
+//const DEFAULT_HOST: &'static str = "localhost";
+//const DEFAULT_BUCKET: &'static str = "default";
+const DEFAULT_URI: &'static str = "couchbase://localhost/default";
+
 /// Handler of Ctrl+C
 fn install_ctrl_c_handler() {
     let running = Arc::new(AtomicBool::new(true));
@@ -60,10 +64,10 @@ fn main() {
             .default_value("5000")
         )
         .arg(Arg::with_name("url")
-            .help("URL - connection string")
+            .help("URI - connection string")
             .short("u")
-            .long("url")
-            .default_value("couchbase://localhost/default")
+            .long("uri")
+            .default_value(DEFAULT_URI)
         )
         .arg(Arg::with_name("verbose")
             .help("Verbose mode")

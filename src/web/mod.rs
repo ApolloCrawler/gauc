@@ -164,7 +164,7 @@ pub fn start_web<'a>(c: &'a Arc<Mutex<Client>>, port: u16) {
     router.post("/bucket/:bucketid/doc/:docid/set", set_handler , "doc_set");
     router.post("/bucket/:bucketid/doc/:docid/upsert", upsert_handler, "doc_upsert");
 
-    let address = format!("localhost:{}", port);
+    let address = format!("0.0.0.0:{}", port);
     match Iron::new(router).http(&address[..]) {
         Ok(_res) => {
             // println!("{:?}", res);

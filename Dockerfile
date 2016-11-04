@@ -1,5 +1,7 @@
 FROM buildpack-deps:jessie
-MAINTAINER Fletcher Nichol <korczis@gmail.com>
+MAINTAINER Tomas Korcak <korczis@gmail.com>
+
+EXPOSE 5000 5000
 
 RUN apt-get update \
   && apt-get install -y --no-install-recommends \
