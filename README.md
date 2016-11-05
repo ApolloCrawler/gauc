@@ -26,6 +26,7 @@ This project was originaly inspired by [couchbase-rs](https://github.com/daschl/
 - [x] append
 - [x] get
 - [x] prepend
+- [x] remove
 - [x] replace
 - [x] set
 - [x] store
@@ -39,6 +40,7 @@ This project was originaly inspired by [couchbase-rs](https://github.com/daschl/
 - [x] lcb_get3
 - [x] lcb_get_bootstrap_status
 - [x] lcb_install_callback3
+- [x] lcb_remove3
 - [x] lcb_store3
 - [x] lcb_strerror
 - [x] lcb_wait
@@ -47,9 +49,9 @@ This project was originaly inspired by [couchbase-rs](https://github.com/daschl/
 
 #### Bucket REST Interface
 
-- [ ] `DELETE  /bucket/<BUCKET_NAME>/doc/<ID>            - delete`
+- [x] `DELETE  /bucket/<BUCKET_NAME>/doc/<ID>            - delete`
 - [x] `GET     /bucket/<BUCKET_NAME>/doc/<ID>            - get`
-- [x] `POST    /bucket/<BUCKET_NAME>/doc/<ID>            - upsert`
+- [x] `POST    /bucket/<BUCKET_NAME>/doc/<ID>            - upsert (implicit)`
 - [x] `POST    /bucket/<BUCKET_NAME>/doc/<ID>/add        - add`
 - [x] `POST    /bucket/<BUCKET_NAME>/doc/<ID>/append     - append`
 - [x] `POST    /bucket/<BUCKET_NAME>/doc/<ID>/prepend    - prepend`
@@ -88,6 +90,8 @@ $ cargo build
 
 ### Build Examples
 
+*TODO: Create make (Makefile) for these*
+
 For list of all examples see [examples folder](https://github.com/korczis/gauc/tree/master/examples)
 
 #### [couchbase](https://github.com/korczis/gauc/blob/master/examples/couchbase.rs) - Low Level Couchbase Access
@@ -105,43 +109,9 @@ $ cargo build --example hello_world
     Finished debug [unoptimized + debuginfo] target(s) in 1.7 secs
 ```
 
-## Example
+## Examples
 
-This simple example demonstrates how to use gauc
-
-***Source***
-
-```
-extern crate gauc;
-
-use gauc::client::*;
-
-fn main() {
-    let mut client = Client::new("couchbase://localhost/default");
-
-    // Store some data
-    client.upsert("foo", "{\"msg\": \"This is test!\"}", |res| {
-        if let Ok(response) = res {
-            println!("Created new document, CAS: {}", response.cas)
-        }
-    });
-
-    // Get data
-    client.get("foo", |res| {
-        if let Ok(response) = res {
-            println!("{} - {}", response.key().unwrap(), response.value().unwrap())
-        }
-    });
-}
-```
-
-***Output***
-
-```
-$ ./target/debug/examples/hello_world
-Created new document, CAS: 1476585187967238144
-foo - {"msg": "This is test!"}
-```
+For examples see [examples folder](https://github.com/ApolloCrawler/gauc/tree/master/examples).
 
 ## Usage
 
@@ -149,7 +119,7 @@ foo - {"msg": "This is test!"}
 
 ```
 $ ./target/debug/gauc -h
-Couchbase Rust Adapter / CLI / REST Interface 0.1.10
+Couchbase Rust Adapter / CLI / REST Interface 0.1.17
 Tomas Korcak <korczis@gmail.com>
 
 USAGE:

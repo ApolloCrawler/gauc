@@ -64,10 +64,40 @@ pub fn handler_get(safe_client: &Arc<Mutex<Client>>, req: &mut Request) -> IronR
     }
 }
 
+pub fn handler_remove(safe_client: &Arc<Mutex<Client>>, req: &mut Request) -> IronResult<Response> {
+    debug!("handler_remove() called");
+    let ref docid = req.extensions.get::<Router>().unwrap().find("docid").unwrap_or("");
+    let mut client = safe_client.lock().unwrap();
+
+    let mut payload = String::new();
+    let _ = req.body.read_to_string(&mut payload).unwrap();
+    let response = client.remove_sync(docid);
+    match response {
+        Ok(result) => {
+            let cas = result.cas.to_string();
+
+            let mut headers = Headers::new();
+            headers.set(ContentType::plaintext());
+            headers.set(ETag(EntityTag::new(false, cas.to_owned())));
+
+            let mut response = Response::with((status::Ok, format!("{}\n", cas)));
+            response.headers = headers;
+            Ok(response)
+        },
+        Err(res) => {
+            Ok(
+                Response::with((status::BadRequest, response::format_error(
+                    *client.instance.as_ref().unwrap().lock().unwrap(),
+                    &res.0.unwrap().rc ))
+                )
+            )
+        }
+    }
+}
+
 pub fn handler_store(safe_client: &Arc<Mutex<Client>>, operation: Operation, req: &mut Request) -> IronResult<Response> {
     let ref docid = req.extensions.get::<Router>().unwrap().find("docid").unwrap_or("");
     let mut client = safe_client.lock().unwrap();
-    // let mut client = c.lock().unwrap();
 
     let mut payload = String::new();
     let _ = req.body.read_to_string(&mut payload).unwrap();
@@ -133,6 +163,12 @@ pub fn start_web<'a>(c: &'a Arc<Mutex<Client>>, port: u16) {
         handler_store(&handler_client, Operation::Prepend, req)
     };
 
+    // Remove handler
+    let handler_client = Arc::new(Mutex::new(c.lock().unwrap().clone()));
+    let remove_handler = move |req: &mut Request| -> IronResult<Response> {
+        handler_remove(&handler_client, req)
+    };
+
     // Replace handler
     let handler_client = Arc::new(Mutex::new(c.lock().unwrap().clone()));
     let replace_handler = move |req: &mut Request| -> IronResult<Response> {
@@ -152,14 +188,11 @@ pub fn start_web<'a>(c: &'a Arc<Mutex<Client>>, port: u16) {
     };
 
     router.get("/bucket/:bucketid/doc/:docid", get_handler, "doc_get");
-
-//    See https://github.com/ApolloCrawler/gauc/issues/4
-//    router.delete("/bucket/:bucketid/doc/:docid", doc::delete::delete_handler, "doc_delete");
-
     router.post("/bucket/:bucketid/doc/:docid", create_handler, "doc_insert");
     router.post("/bucket/:bucketid/doc/:docid/add", add_handler, "doc_add");
     router.post("/bucket/:bucketid/doc/:docid/append", append_handler, "doc_append");
     router.post("/bucket/:bucketid/doc/:docid/prepend", prepend_handler, "doc_prepend");
+    router.delete("/bucket/:bucketid/doc/:docid", remove_handler, "doc_remove");
     router.post("/bucket/:bucketid/doc/:docid/replace", replace_handler, "doc_replace");
     router.post("/bucket/:bucketid/doc/:docid/set", set_handler , "doc_set");
     router.post("/bucket/:bucketid/doc/:docid/upsert", upsert_handler, "doc_upsert");

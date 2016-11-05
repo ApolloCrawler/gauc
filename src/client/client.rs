@@ -18,6 +18,12 @@ pub type OperationResultGetCallback = Box<Box<Fn(&response::Get)>>;
 pub type OperationResultGetInternal<'a> = Result<&'a response::GetInternal, (Option<&'a response::GetInternal>, &'static str)>;
 pub type OperationResultGetInternalCallback = Box<Box<Fn(&response::GetInternal)>>;
 
+// Remove
+pub type OperationResultRemove = Result<response::Remove, (Option<response::Remove>, &'static str)>;
+pub type OperationResultRemoveCallback = Box<Box<Fn(&response::Remove)>>;
+pub type OperationResultRemoveInternal<'a> = Result<&'a response::RemoveInternal, (Option<&'a response::RemoveInternal>, &'static str)>;
+pub type OperationResultRemoveInternalCallback = Box<Box<Fn(&response::RemoveInternal)>>;
+
 // Stores
 pub type OperationResultStore = Result<response::Store, (Option<response::Store>, &'static str)>;
 pub type OperationResultStoreCallback = Box<Box<Fn(&response::Store)>>;
@@ -92,6 +98,7 @@ impl Client {
             }
 
             lcb_install_callback3(instance, CallbackType::Get, op_callback);
+            lcb_install_callback3(instance, CallbackType::Remove, op_callback);
             lcb_install_callback3(instance, CallbackType::Store, op_callback);
 
             self.opts = Some(Arc::new(Mutex::new(opts)));
@@ -189,6 +196,60 @@ impl Client {
     pub fn prepend_sync(&mut self, key: &str, value: &str) -> OperationResultStore
     {
         return self.store_sync(key, value, Operation::Prepend);
+    }
+
+    /// Remove document from database
+    pub fn remove<'a, F>(&'a mut self, key: &str, callback: F) -> &Client
+        where F: Fn(OperationResultRemove) + 'static
+    {
+        let key = key.to_owned();
+
+        let mut gcmd = cmd::Remove::default();
+
+        gcmd.key._type = KvBufferType::Copy;
+        gcmd.key.contig.bytes = key.as_ptr() as *const libc::c_void;
+        gcmd.key.contig.nbytes = key.len() as u64;
+
+        unsafe {
+            let instance = self.instance.as_ref().unwrap().lock().unwrap();
+
+            let boxed: OperationResultRemoveInternalCallback = Box::new(Box::new(move |result: &response::RemoveInternal| {
+                match result.rc {
+                    ErrorType::Success => {
+                        debug!("{:?}", result);
+                        callback(Ok(response::Remove::new(result)));
+                    },
+                    _ => {
+                        callback(Err((Some(response::Remove::new(result)), "error" /* result.error(*instance) */)));
+                    }
+                }
+            }));
+
+            let user_data = Box::into_raw(boxed) as *mut Box<Fn(&response::RemoveInternal)> as *mut c_void;
+
+            let res = lcb_remove3(*instance, user_data, &gcmd as *const cmd::Remove);
+            if res != ErrorType::Success {
+                //  callback(Err((None, format_error(*instance, &res))));
+            } else {
+                let res = lcb_wait(*instance);
+                if res != ErrorType::Success {
+                    // callback(Err((None, format_error(*instance, &res))))
+                }
+            }
+        }
+
+        forget(key);
+
+        return self;
+    }
+
+    pub fn remove_sync(&mut self, key: &str) -> OperationResultRemove
+    {
+        let (tx, rx): (Sender<OperationResultRemove>, Receiver<OperationResultRemove>) = mpsc::channel();
+        self.remove(key, move |result: OperationResultRemove| {
+            let _ = tx.send(result);
+        });
+        return rx.recv().unwrap();
     }
 
     /// Will cause the operation to fail _unless_ the key already exists in the cluster.
@@ -310,6 +371,15 @@ unsafe extern "C" fn op_callback(_instance: Instance, cbtype: CallbackType, resp
 
             let cookie = (*gresp).cookie;
             let callback: Box<Box<Fn(&response::GetInternal)>> = Box::from_raw(cookie as *mut Box<Fn(&response::GetInternal)>);
+            (*callback)(&(*gresp));
+        },
+        CallbackType::Remove => {
+            debug!("Remove Callback Called!");
+            let gresp = resp as *const response::RemoveInternal;
+            debug!("{:?}", *gresp);
+
+            let cookie = (*gresp).cookie;
+            let callback: Box<Box<Fn(&response::RemoveInternal)>> = Box::from_raw(cookie as *mut Box<Fn(&response::RemoveInternal)>);
             (*callback)(&(*gresp));
         },
         CallbackType::Store => {

@@ -3,11 +3,13 @@ use std::ffi::CStr;
 pub mod base;
 pub mod flags;
 pub mod get;
+pub mod remove;
 pub mod store;
 
 pub use self::base::*;
 pub use self::flags::*;
 pub use self::get::*;
+pub use self::remove::*;
 pub use self::store::*;
 
 use super::super::error_type::ErrorType;
