@@ -8,7 +8,7 @@ This project was originaly inspired by [couchbase-rs](https://github.com/daschl/
 
 ## Roadmap
 
-See [ROADMAP.md](https://github.com/ApolloCrawler/gauc/milestones) => [milestones](https://github.com/ApolloCrawler/gauc/milestones) for up-to-date info. 
+See [ROADMAP.md](https://github.com/ApolloCrawler/gauc/milestones)/[milestones](https://github.com/ApolloCrawler/gauc/milestones) for up-to-date info. 
 
 ## Status
 
