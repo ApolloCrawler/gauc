@@ -17,6 +17,8 @@ use std::io::Read;
 use std::sync::{Arc, Mutex};
 
 use super::client::Client;
+use super::couchbase::types::error_type;
+use super::couchbase::types::instance;
 use super::couchbase::types::response;
 use super::couchbase::types::operation::Operation;
 
@@ -40,6 +42,15 @@ pub fn get_meta(cas: &String, version: u16) -> Map<String, serde_json::Value> {
 
     res.insert("cas".to_string(), serde_json::value::Value::String(cas.clone()));
     res.insert("version".to_string(), serde_json::value::Value::U64(version as u64));
+
+    return res;
+}
+
+pub fn get_error(client: instance::InstancePtr, rc: &error_type::ErrorType) -> Map<String, serde_json::Value> {
+    let error = response::format_error(client, rc);
+
+    let mut res: Map<String, serde_json::Value> = Map::new();
+    res.insert("error".to_string(), serde_json::value::Value::String(error.to_string()));
 
     return res;
 }
@@ -71,12 +82,19 @@ pub fn handler_get(safe_client: &Arc<Mutex<Client>>, req: &mut Request) -> IronR
             Ok(response)
         },
         Err(res) => {
-            Ok(
-                Response::with((status::BadRequest, response::format_error(
+            let mut headers = Headers::new();
+            headers.set(ContentType(Mime(TopLevel::Application, SubLevel::Json, vec![(Attr::Charset, Value::Utf8)])));
+
+            let json = serde_json::to_string(
+                &get_error(
                     *client.instance.as_ref().unwrap().lock().unwrap(),
-                    &res.0.unwrap().rc ))
+                    &res.0.unwrap().rc
                 )
-            )
+            ).unwrap();
+
+            let mut response = Response::with((status::BadRequest, json));
+            response.headers = headers;
+            Ok(response)
         }
     }
 }
@@ -107,12 +125,19 @@ pub fn handler_remove(safe_client: &Arc<Mutex<Client>>, req: &mut Request) -> Ir
             Ok(response)
         },
         Err(res) => {
-            Ok(
-                Response::with((status::BadRequest, response::format_error(
+            let mut headers = Headers::new();
+            headers.set(ContentType(Mime(TopLevel::Application, SubLevel::Json, vec![(Attr::Charset, Value::Utf8)])));
+
+            let json = serde_json::to_string(
+                &get_error(
                     *client.instance.as_ref().unwrap().lock().unwrap(),
-                    &res.0.unwrap().rc ))
+                    &res.0.unwrap().rc
                 )
-            )
+            ).unwrap();
+
+            let mut response = Response::with((status::BadRequest, json));
+            response.headers = headers;
+            Ok(response)
         }
     }
 }
@@ -142,12 +167,19 @@ pub fn handler_store(safe_client: &Arc<Mutex<Client>>, operation: Operation, req
             Ok(response)
         },
         Err(res) => {
-            Ok(
-                Response::with((status::BadRequest, response::format_error(
+            let mut headers = Headers::new();
+            headers.set(ContentType(Mime(TopLevel::Application, SubLevel::Json, vec![(Attr::Charset, Value::Utf8)])));
+
+            let json = serde_json::to_string(
+                &get_error(
                     *client.instance.as_ref().unwrap().lock().unwrap(),
-                    &res.0.unwrap().rc ))
+                    &res.0.unwrap().rc
                 )
-            )
+            ).unwrap();
+
+            let mut response = Response::with((status::BadRequest, json));
+            response.headers = headers;
+            Ok(response)
         }
     }
 }
