@@ -1,6 +1,6 @@
 [package]
 name = "gauc"
-version = "0.1.17"
+version = "0.1.18"
 authors = ["Tomas Korcak <korczis@gmail.com>"]
 
 description = "Couchbase Rust Adapter / CLI"
@@ -30,7 +30,8 @@ libc = ">= 0.2.16"
 log = ">= 0.3.6"
 router = ">= 0.4.0"
 # rust-crypto = "0.2.36"
-serde = ">= 0.8.16"
+serde = "0.8"
+serde_json = "0.8"
 
 [lib]
 name = "gauc"

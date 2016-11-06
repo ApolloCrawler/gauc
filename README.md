@@ -6,16 +6,16 @@
 
 This project was originaly inspired by [couchbase-rs](https://github.com/daschl/couchbase-rs)
 
-## Roadmap
-
-See [ROADMAP](https://github.com/ApolloCrawler/gauc/blob/master/ROADMAP.md) or [milestones](https://github.com/ApolloCrawler/gauc/milestones) for up-to-date info. 
-
 ## Status
 
 [![Build Status](https://travis-ci.org/ApolloCrawler/gauc.svg?branch=master)](https://travis-ci.org/ApolloCrawler/gauc)
 [![Crates.io](https://img.shields.io/crates/v/gauc.svg)](https://crates.io/crates/gauc)
 [![Crates.io](https://img.shields.io/crates/d/gauc.svg)](https://crates.io/crates/gauc)
 [![Crates.io](https://img.shields.io/crates/dv/gauc.svg)](https://crates.io/crates/gauc)
+
+## Roadmap
+
+See [ROADMAP](https://github.com/ApolloCrawler/gauc/blob/master/ROADMAP.md) or  [milestones](https://github.com/ApolloCrawler/gauc/milestones) for up-to-date info. 
 
 ## Prerequisites
 

@@ -2,9 +2,8 @@ extern crate clap;
 extern crate hyper;
 extern crate iron;
 extern crate router;
-
-
-mod handler;
+extern crate serde;
+extern crate serde_json;
 
 use hyper::header::{ContentType, Headers, ETag, EntityTag};
 use hyper::mime::{Attr, Mime, TopLevel, SubLevel, Value};
@@ -12,6 +11,7 @@ use hyper::mime::{Attr, Mime, TopLevel, SubLevel, Value};
 use iron::prelude::*;
 use iron::status;
 use router::Router;
+use serde_json::Map;
 
 use std::io::Read;
 use std::sync::{Arc, Mutex};
@@ -35,6 +35,15 @@ use super::couchbase::types::operation::Operation;
 // POST    /bucket/<BUCKET_NAME>/doc/<ID>/set        - set *
 // POST    /bucket/<BUCKET_NAME>/doc/<ID>/upsert     - upsert (explitcit) *
 
+pub fn get_meta(cas: &String, version: u16) -> Map<String, serde_json::Value> {
+    let mut res: Map<String, serde_json::Value> = Map::new();
+
+    res.insert("cas".to_string(), serde_json::value::Value::String(cas.clone()));
+    res.insert("version".to_string(), serde_json::value::Value::U64(version as u64));
+
+    return res;
+}
+
 pub fn handler_get(safe_client: &Arc<Mutex<Client>>, req: &mut Request) -> IronResult<Response> {
     let ref docid = req.extensions.get::<Router>().unwrap().find("docid").unwrap_or("");
     let mut client = safe_client.lock().unwrap();
@@ -49,7 +58,15 @@ pub fn handler_get(safe_client: &Arc<Mutex<Client>>, req: &mut Request) -> IronR
             headers.set(ContentType(Mime(TopLevel::Application, SubLevel::Json, vec![(Attr::Charset, Value::Utf8)])));
             headers.set(ETag(EntityTag::new(false, cas.to_owned())));
 
-            let mut response = Response::with((status::Ok, format!("{}\n", value)));
+            let mut map = Map::new();
+            map.insert("meta".to_string(), get_meta(&cas, result.version));
+
+            let doc: Map<String, serde_json::Value> = serde_json::from_str(&value).unwrap();
+            map.insert("doc".to_string(), doc);
+
+            let json = serde_json::to_string(&map).unwrap();
+
+            let mut response = Response::with((status::Ok, json));
             response.headers = headers;
             Ok(response)
         },
@@ -77,10 +94,15 @@ pub fn handler_remove(safe_client: &Arc<Mutex<Client>>, req: &mut Request) -> Ir
             let cas = result.cas.to_string();
 
             let mut headers = Headers::new();
-            headers.set(ContentType::plaintext());
+            headers.set(ContentType(Mime(TopLevel::Application, SubLevel::Json, vec![(Attr::Charset, Value::Utf8)])));
             headers.set(ETag(EntityTag::new(false, cas.to_owned())));
 
-            let mut response = Response::with((status::Ok, format!("{}\n", cas)));
+            let mut map = Map::new();
+            map.insert("meta".to_string(), get_meta(&cas, result.version));
+
+            let json = serde_json::to_string(&map).unwrap();
+
+            let mut response = Response::with((status::Ok, json));
             response.headers = headers;
             Ok(response)
         },
@@ -107,10 +129,15 @@ pub fn handler_store(safe_client: &Arc<Mutex<Client>>, operation: Operation, req
             let cas = result.cas.to_string();
 
             let mut headers = Headers::new();
-            headers.set(ContentType::plaintext());
+            headers.set(ContentType(Mime(TopLevel::Application, SubLevel::Json, vec![(Attr::Charset, Value::Utf8)])));
             headers.set(ETag(EntityTag::new(false, cas.to_owned())));
 
-            let mut response = Response::with((status::Ok, format!("{}\n", cas)));
+            let mut map = Map::new();
+            map.insert("meta".to_string(), get_meta(&cas, result.version));
+
+            let json = serde_json::to_string(&map).unwrap();
+
+            let mut response = Response::with((status::Ok, json));
             response.headers = headers;
             Ok(response)
         },
