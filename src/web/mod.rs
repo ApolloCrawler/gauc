@@ -75,6 +75,7 @@ pub fn handler_get(safe_client: &Arc<Mutex<Client>>, req: &mut Request) -> IronR
             let doc: Map<String, serde_json::Value> = serde_json::from_str(&value).unwrap();
             map.insert("doc".to_string(), doc);
 
+            // TODO: Handle non-json documents
             let json = serde_json::to_string(&map).unwrap();
 
             let mut response = Response::with((status::Ok, json));

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.20
+
+- Support for COUCHBASE_URI environment variable
+
 ## 0.1.19
 
 - REST returns errors wrapped in JSON

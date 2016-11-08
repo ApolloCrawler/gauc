@@ -43,6 +43,12 @@ fn install_ctrl_c_handler() {
 fn main() {
     install_ctrl_c_handler();
 
+
+    let couchbase_uri = match env::var("COUCHBASE_URI") {
+        Ok(uri) => uri,
+        Err(_) => DEFAULT_URI.to_string()
+    };
+
     // Specify program options
     let matches = App::new(DESCRIPTION)
         .version(VERSION)
@@ -67,7 +73,7 @@ fn main() {
             .help("URI - connection string")
             .short("u")
             .long("uri")
-            .default_value(DEFAULT_URI)
+            .default_value(&couchbase_uri[..])
         )
         .arg(Arg::with_name("verbose")
             .help("Verbose mode")
