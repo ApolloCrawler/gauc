@@ -1,6 +1,6 @@
 [package]
 name = "gauc"
-version = "0.1.20"
+version = "0.1.21"
 authors = ["Tomas Korcak <korczis@gmail.com>"]
 
 description = "Couchbase Rust Adapter / CLI"
@@ -21,10 +21,10 @@ keywords = ["couchbase", "database"]
 license = "MIT"
 
 [dependencies]
-clap = ">= 2.14.0"
+clap = ">= 2.18.0"
 ctrlc = ">= 2.0.1"
 env_logger = ">= 0.3.5"
-hyper = "= 0.9.10"
+hyper = "= 0.9.14"
 iron = ">= 0.4.0"
 libc = ">= 0.2.16"
 log = ">= 0.3.6"
