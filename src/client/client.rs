@@ -353,8 +353,6 @@ impl Client {
     pub fn view_query<'a, F>(&'a mut self, ddoc: &str, view: &str, callback: F) -> &Client
         where F: Fn(OperationResultViewQuery) + 'static
     {
-        println!("{}", "client.view_query()");
-
         unsafe {
             extern "C" fn callback_helper(instance: *mut Instance, cbtype: CallbackType, raw_row: *const response::ViewQueryInternal) {
                 let row = unsafe { &(*raw_row) };
@@ -362,12 +360,12 @@ impl Client {
 
                 unsafe {
                     let cb: Box<Box<Fn(&response::ViewQueryInternal)>> = Box::from_raw(row.cookie as *mut Box<Fn(&response::ViewQueryInternal)>);
-                    (*cb)(row);
+                    (*cb)(&row.clone());
                 }
             }
 
             let mut gcmd = cmd::ViewQuery::default();
-            // gcmd.cmdflags |= 1 << 16;  // LCB_CMDVIEWQUERY_F_INCLUDE_DOCS;
+            gcmd.cmdflags |= 1 << 16;  // LCB_CMDVIEWQUERY_F_INCLUDE_DOCS;
             gcmd.ddoc = ddoc.as_bytes().as_ptr() as *const libc::c_void;
             gcmd.nddoc = ddoc.len() as u64;
             gcmd.view = view.as_bytes().as_ptr() as *const libc::c_void;
@@ -405,8 +403,6 @@ impl Client {
 
     pub fn view_query_sync(&mut self, ddoc: &str, view: &str) -> OperationResultViewQuery
     {
-        println!("{}", "client.view_query_sync()");
-
         let (tx, rx): (Sender<OperationResultViewQuery>, Receiver<OperationResultViewQuery>) = mpsc::channel();
         self.view_query(ddoc, view, move |result: OperationResultViewQuery| {
             let _ = tx.send(result);

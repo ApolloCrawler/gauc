@@ -1,4 +1,5 @@
 use libc::{c_ulong, c_ulonglong, c_void};
+use std::{fmt, ptr};
 
 use super::get;
 use super::super::error_type::ErrorType;
@@ -7,7 +8,7 @@ use super::super::instance::Instance;
 use super::format_error;
 
 #[repr(C)]
-#[derive(Debug, Clone, Copy)]
+#[derive(Clone, Copy)]
 pub struct ViewQueryInternal {
     pub cookie: *mut c_void,
     pub key: *const c_void,
@@ -24,6 +25,37 @@ pub struct ViewQueryInternal {
     pub ngeometry: c_ulong,
     pub htresp: *const c_void,
     pub docresp: *const get::GetInternal
+}
+
+impl fmt::Debug for ViewQueryInternal {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "ViewQueryInternal {{ cookie: {:?}, \
+                key: {:?}, \
+                cas: {:?}, \
+                rc: {:?}, \
+                version: {:?}, \
+                rflags: {:?}, \
+                docid: {:?}, \
+                value: {:?}, \
+                geometry: {:?}, \
+                httpres: {:?}, \
+                docresp: {:?} \
+           }}",
+           self.cookie,
+           self.key(),
+           self.cas,
+           self.rc,
+           self.version,
+           self.rflags,
+           self.docid(),
+           self.value(),
+           self.geometry,
+           self.htresp,
+           self.docresp()
+        )
+    }
 }
 
 impl ViewQueryInternal {
@@ -80,6 +112,19 @@ impl ViewQueryInternal {
                     let bytes = ::std::slice::from_raw_parts(self.geometry as *mut u8, self.ngeometry as usize);
                     let text = ::std::str::from_utf8(bytes).unwrap();
                     return Some(text.to_string());
+                },
+                _ => {
+                    return None;
+                }
+            }
+        }
+    }
+
+    pub fn docresp(&self) -> Option<get::GetInternal> {
+        unsafe {
+            match self.docresp != ptr::null() {
+                true => {
+                    return Some(*self.docresp);
                 },
                 _ => {
                     return None;

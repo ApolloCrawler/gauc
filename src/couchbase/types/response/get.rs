@@ -1,4 +1,5 @@
 use libc::{c_ulong, c_ulonglong, c_void};
+use std::fmt;
 
 use super::super::error_type::ErrorType;
 use super::super::instance::Instance;
@@ -6,7 +7,7 @@ use super::super::instance::Instance;
 use super::format_error;
 
 #[repr(C)]
-#[derive(Debug, Clone, Copy)]
+#[derive(Clone, Copy)]
 pub struct GetInternal {
     pub cookie: *mut c_void,
     pub key: *const c_void,
@@ -20,6 +21,36 @@ pub struct GetInternal {
     pub bufh: *mut c_void,
     pub datatype: u8,
     pub itmflags: u32,
+}
+
+impl fmt::Debug for GetInternal {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "GetInternal {{ \
+                cookie: {:?}, \
+                key: {:?}, \
+                cas: {:?}, \
+                rc: {:?}, \
+                version: {:?}, \
+                rflags: {:?}, \
+                value: {:?}, \
+                bufh: {:?}, \
+                datatype: {:?}, \
+                itmflags: {:?} \
+           }}",
+            self.cookie,
+            self.key(),
+            self.cas,
+            self.rc,
+            self.version,
+            self.rflags,
+            self.value(),
+            self.bufh,
+            self.datatype,
+            self.itmflags
+        )
+    }
 }
 
 impl GetInternal {
