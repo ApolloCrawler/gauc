@@ -370,12 +370,16 @@ impl Client {
 
 
         unsafe {
+            extern "C" fn callback_helper(instance: *mut c_void, cbtype: isize, row: *const c_void) {
+                println!("{}", ".");
+            }
+
             let mut gcmd = cmd::ViewQuery::default();
             gcmd.ddoc = ddoc.as_bytes().as_ptr() as *const libc::c_void;
             gcmd.nddoc = ddoc.len() as u64;
             gcmd.view = view.as_bytes().as_ptr() as *const libc::c_void;
             gcmd.nview = view.len() as u64;
-            gcmd.callback = callback_internal_raw;
+            gcmd.callback = callback_helper as *mut libc::c_void;
 
             println!("view_query() - gcmd.callback = {:?}", callback_internal_raw);
 
