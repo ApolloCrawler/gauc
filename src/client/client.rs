@@ -358,21 +358,11 @@ impl Client {
     {
         println!("{}", "client.view_query()");
 
-        let ddoc = ddoc.to_owned();
-        let view = view.to_owned();
-
-        let callback_internal = Box::new(Box::new(move |instance: &Instance, cbtype: &u64, data: *mut c_void| {
-            println!("{}", ".");
-            let _ = stdout().flush();
-        }));
-
-        let callback_internal_raw = Box::into_raw(callback_internal) as *mut Box<Fn(&Instance, &u64, *mut c_void)> as *mut c_void;
-
-
         unsafe {
-            extern "C" fn callback_helper(instance: *mut c_void, cbtype: isize, row: *const c_void) {
-                println!("{}", ".");
+            extern "C" fn callback_helper(instance: *mut Instance, cbtype: CallbackType, row: *const response::ViewQueryInternal) {
+                println!("callback_helper({:?}, {:?}, {:?})", instance, cbtype, unsafe { *row });
             }
+
 
             let mut gcmd = cmd::ViewQuery::default();
             gcmd.ddoc = ddoc.as_bytes().as_ptr() as *const libc::c_void;
@@ -381,7 +371,7 @@ impl Client {
             gcmd.nview = view.len() as u64;
             gcmd.callback = callback_helper as *mut libc::c_void;
 
-            println!("view_query() - gcmd.callback = {:?}", callback_internal_raw);
+            println!("view_query() - gcmd.callback = {:?}", gcmd.callback);
 
             let boxed: OperationResultViewQueryInternalCallback = Box::new(Box::new(move |result: &response::ViewQueryInternal| {
                 match result.rc {
@@ -394,6 +384,7 @@ impl Client {
                     }
                 }
             }));
+
 
             let user_data = Box::into_raw(boxed) as *mut Box<Fn(&response::ViewQueryInternal)> as *mut c_void;
             println!("view_query() - user_data = {:?}", user_data);
@@ -413,6 +404,7 @@ impl Client {
             }
         }
 
+        println!("");
         println!("{}", "view_query() - leaving");
 
         return self;

@@ -15,11 +15,14 @@ pub struct ViewQueryInternal {
     pub rc: ErrorType,
     pub version: u16,
     pub rflags: u16,
+    pub docid: *const c_void,
+    pub ndocid: c_ulong,
     pub value: *const c_void,
     pub nvalue: c_ulong,
-    pub bufh: *mut c_void,
-    pub datatype: u8,
-    pub itmflags: u32,
+    pub geometry: *const c_void,
+    pub ngeometry: c_ulong,
+    pub htresp: *const c_void,
+    pub docresp: *const c_void
 }
 
 impl ViewQueryInternal {
@@ -39,11 +42,41 @@ impl ViewQueryInternal {
         }
     }
 
+    pub fn docid(&self) -> Option<String> {
+        unsafe {
+            match self.rc {
+                ErrorType::Success => {
+                    let bytes = ::std::slice::from_raw_parts(self.docid as *mut u8, self.ndocid as usize);
+                    let text = ::std::str::from_utf8(bytes).unwrap();
+                    return Some(text.to_string());
+                },
+                _ => {
+                    return None;
+                }
+            }
+        }
+    }
+
     pub fn value(&self) -> Option<String> {
         unsafe {
             match self.rc {
                 ErrorType::Success => {
                     let bytes = ::std::slice::from_raw_parts(self.value as *mut u8, self.nvalue as usize);
+                    let text = ::std::str::from_utf8(bytes).unwrap();
+                    return Some(text.to_string());
+                },
+                _ => {
+                    return None;
+                }
+            }
+        }
+    }
+
+    pub fn geometry(&self) -> Option<String> {
+        unsafe {
+            match self.rc {
+                ErrorType::Success => {
+                    let bytes = ::std::slice::from_raw_parts(self.geometry as *mut u8, self.ngeometry as usize);
                     let text = ::std::str::from_utf8(bytes).unwrap();
                     return Some(text.to_string());
                 },
