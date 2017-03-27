@@ -356,9 +356,11 @@ impl Client {
         unsafe {
             extern "C" fn callback_helper(_instance: *mut Instance, _cbtype: CallbackType, raw_row: *const response::ViewQueryInternal) {
                 let row = unsafe { &(*raw_row) };
-                unsafe {
-                    let cb: Box<Box<Fn(&response::ViewQueryInternal)>> = Box::from_raw(row.cookie as *mut Box<Fn(&response::ViewQueryInternal)>);
-                    (*cb)(&row.clone());
+                if row.rflags == 1 {
+                    unsafe {
+                        let cb: Box<Box<Fn(&response::ViewQueryInternal)>> = Box::from_raw(row.cookie as *mut Box<Fn(&response::ViewQueryInternal)>);
+                        (*cb)(&row.clone());
+                    }
                 }
             }
 
