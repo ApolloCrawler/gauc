@@ -1,8 +1,11 @@
 extern crate libc;
 
+use super::super::couchbase::types::response::format_error;
+
 use libc::{c_void};
 use std::ffi::CStr;
 use std::ffi::CString;
+use std::io::{stdout, Write};
 use std::{process};
 use std::mem::{forget};
 use std::sync::mpsc;
@@ -24,11 +27,18 @@ pub type OperationResultRemoveCallback = Box<Box<Fn(&response::Remove)>>;
 pub type OperationResultRemoveInternal<'a> = Result<&'a response::RemoveInternal, (Option<&'a response::RemoveInternal>, &'static str)>;
 pub type OperationResultRemoveInternalCallback = Box<Box<Fn(&response::RemoveInternal)>>;
 
-// Stores
+// Store
 pub type OperationResultStore = Result<response::Store, (Option<response::Store>, &'static str)>;
 pub type OperationResultStoreCallback = Box<Box<Fn(&response::Store)>>;
 pub type OperationResultStoreInternal<'a> = Result<&'a response::StoreInternal, (Option<&'a response::StoreInternal>, &'static str)>;
 pub type OperationResultStoreInternalCallback = Box<Box<Fn(&response::StoreInternal)>>;
+
+// ViewQuery
+pub type OperationResultViewQuery = Result<response::ViewQuery, (Option<response::ViewQuery>, &'static str)>;
+pub type OperationResultViewQueryCallback = Box<Box<Fn(&response::ViewQuery)>>;
+pub type OperationResultViewQueryInternal<'a> = Result<&'a response::ViewQueryInternal, (Option<&'a response::ViewQueryInternal>, &'static str)>;
+pub type OperationResultViewQueryInternalCallback = Box<Box<Fn(&response::ViewQueryInternal)>>;
+pub type OperationResultViewQueryInternalRowCallback = Box<Box<Fn(&Instance, &u64, *mut c_void)>>;
 
 #[derive(Debug)]
 pub struct Client {
@@ -341,11 +351,80 @@ impl Client {
     {
         return self.store_sync(key, value, Operation::Upsert);
     }
-}
 
-//impl Clone for Client {
-//
-//}
+    /// Store document in database
+    pub fn view_query<'a, F>(&'a mut self, ddoc: &str, view: &str, callback: F) -> &Client
+        where F: Fn(OperationResultViewQuery) + 'static
+    {
+        println!("{}", "client.view_query()");
+
+        let ddoc = ddoc.to_owned();
+        let view = view.to_owned();
+
+        let callback_internal = Box::new(Box::new(move |instance: &Instance, cbtype: &u64, data: *mut c_void| {
+            println!("{}", ".");
+            let _ = stdout().flush();
+        }));
+
+        let callback_internal_raw = Box::into_raw(callback_internal) as *mut Box<Fn(&Instance, &u64, *mut c_void)> as *mut c_void;
+
+
+        unsafe {
+            let mut gcmd = cmd::ViewQuery::default();
+            gcmd.ddoc = ddoc.as_bytes().as_ptr() as *const libc::c_void;
+            gcmd.nddoc = ddoc.len() as u64;
+            gcmd.view = view.as_bytes().as_ptr() as *const libc::c_void;
+            gcmd.nview = view.len() as u64;
+            gcmd.callback = callback_internal_raw;
+
+            println!("view_query() - gcmd.callback = {:?}", callback_internal_raw);
+
+            let boxed: OperationResultViewQueryInternalCallback = Box::new(Box::new(move |result: &response::ViewQueryInternal| {
+                match result.rc {
+                    ErrorType::Success => {
+                        debug!("{:?}", result);
+                        callback(Ok(response::ViewQuery::new(result)));
+                    },
+                    _ => {
+                        callback(Err((Some(response::ViewQuery::new(result)), "error" /* result.error(self.instance) */)));
+                    }
+                }
+            }));
+
+            let user_data = Box::into_raw(boxed) as *mut Box<Fn(&response::ViewQueryInternal)> as *mut c_void;
+            println!("view_query() - user_data = {:?}", user_data);
+
+            let instance = self.instance.as_ref().unwrap().lock().unwrap();
+            let res = lcb_view_query(*instance, user_data, &gcmd as *const cmd::ViewQuery);
+            if res != ErrorType::Success {
+                // callback(Err((None, format_error(instance, &res))))
+                println!("{} - {}", "client.view_query() - error", format_error(*instance, &res));
+
+            } else {
+                let res = lcb_wait(*instance);
+                if res != ErrorType::Success {
+                    // callback(Err((None, format_error(instance, &res))))
+                    println!("{}", "client.view_query() - success");
+                }
+            }
+        }
+
+        println!("{}", "view_query() - leaving");
+
+        return self;
+    }
+
+    pub fn view_query_sync(&mut self, ddoc: &str, view: &str) -> OperationResultViewQuery
+    {
+        println!("{}", "client.view_query_sync()");
+
+        let (tx, rx): (Sender<OperationResultViewQuery>, Receiver<OperationResultViewQuery>) = mpsc::channel();
+        self.view_query(ddoc, view, move |result: OperationResultViewQuery| {
+            let _ = tx.send(result);
+        });
+        return rx.recv().unwrap();
+    }
+}
 
 impl Drop for Client {
     fn drop(&mut self) {

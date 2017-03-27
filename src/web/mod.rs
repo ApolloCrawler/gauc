@@ -185,6 +185,35 @@ pub fn handler_store(safe_client: &Arc<Mutex<Client>>, operation: Operation, req
     }
 }
 
+pub fn handler_view_query(safe_client: &Arc<Mutex<Client>>, req: &mut Request) -> IronResult<Response> {
+    let ref ddoc = req.extensions.get::<Router>().unwrap().find("ddoc").unwrap_or("");
+    let ref view = req.extensions.get::<Router>().unwrap().find("view").unwrap_or("");
+    let mut client = safe_client.lock().unwrap();
+
+    let response = client.view_query_sync(ddoc, view);
+    match response {
+        Err(res) => {
+            let mut headers = Headers::new();
+            headers.set(ContentType(Mime(TopLevel::Application, SubLevel::Json, vec![(Attr::Charset, Value::Utf8)])));
+
+            let json = serde_json::to_string(
+                &get_error(
+                    *client.instance.as_ref().unwrap().lock().unwrap(),
+                    &res.0.unwrap().rc
+                )
+            ).unwrap();
+
+            let mut response = Response::with((status::BadRequest, json));
+            response.headers = headers;
+            Ok(response)
+        },
+        _ => {
+            let mut response = Response::with((status::Ok, "test"));
+            Ok(response)
+        }
+    }
+}
+
 #[allow(unused_mut)]
 #[allow(unused_must_use)]
 #[allow(unused_variables)]
@@ -247,6 +276,13 @@ pub fn start_web<'a>(c: &'a Arc<Mutex<Client>>, port: u16) {
         handler_store(&handler_client, Operation::Upsert, req)
     };
 
+    // View query handler
+    let handler_client = Arc::new(Mutex::new(c.lock().unwrap().clone()));
+    let view_query_handler = move |req: &mut Request| -> IronResult<Response> {
+        handler_view_query(&handler_client, req)
+    };
+
+    // Docs
     router.get("/bucket/:bucketid/doc/:docid", get_handler, "doc_get");
     router.post("/bucket/:bucketid/doc/:docid", create_handler, "doc_insert");
     router.post("/bucket/:bucketid/doc/:docid/add", add_handler, "doc_add");
@@ -256,6 +292,9 @@ pub fn start_web<'a>(c: &'a Arc<Mutex<Client>>, port: u16) {
     router.post("/bucket/:bucketid/doc/:docid/replace", replace_handler, "doc_replace");
     router.post("/bucket/:bucketid/doc/:docid/set", set_handler , "doc_set");
     router.post("/bucket/:bucketid/doc/:docid/upsert", upsert_handler, "doc_upsert");
+
+    // Views
+    router.get("/bucket/:bucketid/view/:ddoc/:view", view_query_handler, "view_query");
 
     let address = format!("0.0.0.0:{}", port);
     match Iron::new(router).http(&address[..]) {

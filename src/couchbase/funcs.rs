@@ -20,5 +20,6 @@ extern {
     pub fn lcb_remove3(instance: Instance, cookie: *const c_void, cmd: *const cmd::Remove) -> ErrorType;
     pub fn lcb_store3(instance: Instance, cookie: *const c_void, cmd: *const cmd::Store) -> ErrorType;
     pub fn lcb_strerror(instance: Instance, error: ErrorType) -> *const c_char;
+    pub fn lcb_view_query(instance: Instance, cookie: *const c_void, cmd: *const cmd::ViewQuery) -> ErrorType;
     pub fn lcb_wait(instance: Instance) -> ErrorType;
 }
