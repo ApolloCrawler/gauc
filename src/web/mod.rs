@@ -208,7 +208,8 @@ pub fn handler_view_query(safe_client: &Arc<Mutex<Client>>, req: &mut Request) -
             Ok(response)
         },
         _ => {
-            let mut response = Response::with((status::Ok, "test"));
+            debug!("GOT RESPONSE!!!!");
+            let response = Response::with((status::Ok, "test"));
             Ok(response)
         }
     }

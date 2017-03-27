@@ -1,5 +1,6 @@
 use libc::{c_ulong, c_ulonglong, c_void};
 
+use super::get;
 use super::super::error_type::ErrorType;
 use super::super::instance::Instance;
 
@@ -22,7 +23,7 @@ pub struct ViewQueryInternal {
     pub geometry: *const c_void,
     pub ngeometry: c_ulong,
     pub htresp: *const c_void,
-    pub docresp: *const c_void
+    pub docresp: *const get::GetInternal
 }
 
 impl ViewQueryInternal {

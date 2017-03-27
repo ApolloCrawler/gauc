@@ -1,11 +1,8 @@
 extern crate libc;
 
-use super::super::couchbase::types::response::format_error;
-
 use libc::{c_void};
 use std::ffi::CStr;
 use std::ffi::CString;
-use std::io::{stdout, Write};
 use std::{process};
 use std::mem::{forget};
 use std::sync::mpsc;
@@ -359,19 +356,23 @@ impl Client {
         println!("{}", "client.view_query()");
 
         unsafe {
-            extern "C" fn callback_helper(instance: *mut Instance, cbtype: CallbackType, row: *const response::ViewQueryInternal) {
-                println!("callback_helper({:?}, {:?}, {:?})", instance, cbtype, unsafe { *row });
+            extern "C" fn callback_helper(instance: *mut Instance, cbtype: CallbackType, raw_row: *const response::ViewQueryInternal) {
+                let row = unsafe { *raw_row };
+                debug!("view_query - callback_helper({:?}, {:?}, {:?})", instance, cbtype, row);
+
+                unsafe {
+                    let cb: Box<Box<Fn(&response::ViewQueryInternal)>> = Box::from_raw(row.cookie as *mut Box<Fn(&response::ViewQueryInternal)>);
+                    (*cb)(&row.clone());
+                }
             }
 
-
             let mut gcmd = cmd::ViewQuery::default();
+            // gcmd.cmdflags |= 1 << 16;  // LCB_CMDVIEWQUERY_F_INCLUDE_DOCS;
             gcmd.ddoc = ddoc.as_bytes().as_ptr() as *const libc::c_void;
             gcmd.nddoc = ddoc.len() as u64;
             gcmd.view = view.as_bytes().as_ptr() as *const libc::c_void;
             gcmd.nview = view.len() as u64;
             gcmd.callback = callback_helper as *mut libc::c_void;
-
-            println!("view_query() - gcmd.callback = {:?}", gcmd.callback);
 
             let boxed: OperationResultViewQueryInternalCallback = Box::new(Box::new(move |result: &response::ViewQueryInternal| {
                 match result.rc {
@@ -380,34 +381,26 @@ impl Client {
                         callback(Ok(response::ViewQuery::new(result)));
                     },
                     _ => {
-                        callback(Err((Some(response::ViewQuery::new(result)), "error" /* result.error(self.instance) */)));
+                        callback(Err((Some(response::ViewQuery::new(result)), "error")));
                     }
                 }
             }));
 
-
             let user_data = Box::into_raw(boxed) as *mut Box<Fn(&response::ViewQueryInternal)> as *mut c_void;
-            println!("view_query() - user_data = {:?}", user_data);
 
             let instance = self.instance.as_ref().unwrap().lock().unwrap();
             let res = lcb_view_query(*instance, user_data, &gcmd as *const cmd::ViewQuery);
             if res != ErrorType::Success {
                 // callback(Err((None, format_error(instance, &res))))
-                println!("{} - {}", "client.view_query() - error", format_error(*instance, &res));
-
             } else {
                 let res = lcb_wait(*instance);
                 if res != ErrorType::Success {
                     // callback(Err((None, format_error(instance, &res))))
-                    println!("{}", "client.view_query() - success");
                 }
             }
         }
 
-        println!("");
-        println!("{}", "view_query() - leaving");
-
-        return self;
+        self
     }
 
     pub fn view_query_sync(&mut self, ddoc: &str, view: &str) -> OperationResultViewQuery
