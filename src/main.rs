@@ -28,7 +28,7 @@ const DEFAULT_URI: &'static str = "couchbase://localhost/default";
 fn install_ctrl_c_handler() {
     let running = Arc::new(AtomicBool::new(true));
     let r = running.clone();
-    ctrlc::set_handler(move || {
+    let _ = ctrlc::set_handler(move || {
         println!("");
         println!("");
 
