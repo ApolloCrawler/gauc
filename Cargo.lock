@@ -1,6 +1,6 @@
 [root]
 name = "gauc"
-version = "0.1.21"
+version = "0.2.0"
 dependencies = [
  "clap 2.22.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "ctrlc 3.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
