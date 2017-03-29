@@ -208,28 +208,25 @@ pub fn handler_view_query(safe_client: &Arc<Mutex<Client>>, req: &mut Request) -
             response.headers = headers;
             Ok(response)
         },
-        _ => {
-//            let cas = result.cas.to_string();
-//            let value = result.value.unwrap();
-//
-//            let mut headers = Headers::new();
-//            headers.set(ContentType(Mime(TopLevel::Application, SubLevel::Json, vec![(Attr::Charset, Value::Utf8)])));
-//            headers.set(ETag(EntityTag::new(false, cas.to_owned())));
-//
-//            let mut map = Map::new();
+        Ok(res) => {
+            let cas = res.cas.to_string();
+            let value = res.value.unwrap();
+
+            let mut headers = Headers::new();
+            headers.set(ContentType(Mime(TopLevel::Application, SubLevel::Json, vec![(Attr::Charset, Value::Utf8)])));
+            headers.set(ETag(EntityTag::new(false, cas.to_owned())));
+
+            let mut map = Map::new();
 //            map.insert("meta".to_string(), get_meta(&cas, result.version));
-//
-//            let doc: Map<String, serde_json::Value> = serde_json::from_str(&value).unwrap();
-//            map.insert("doc".to_string(), doc);
-//
-//            // TODO: Handle non-json documents
-//            let json = serde_json::to_string(&map).unwrap();
-//
-//            let mut response = Response::with((status::Ok, json));
-//            response.headers = headers;
-//            Ok(response)
-//
-            let response = Response::with((status::Ok, "test"));
+
+            let doc: Map<String, serde_json::Value> = serde_json::from_str(&value).unwrap();
+            map.insert("doc".to_string(), doc);
+
+            // TODO: Handle non-json documents
+            let json = serde_json::to_string(&map).unwrap();
+
+            let mut response = Response::with((status::Ok, json));
+            response.headers = headers;
             Ok(response)
         }
     }

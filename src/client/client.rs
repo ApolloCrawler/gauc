@@ -363,7 +363,7 @@ impl Client {
                     }
                 }
             }
-
+            
             let mut gcmd = cmd::ViewQuery::default();
             gcmd.cmdflags |= 1 << 16;  // LCB_CMDVIEWQUERY_F_INCLUDE_DOCS;
             gcmd.ddoc = ddoc.as_bytes().as_ptr() as *const libc::c_void;
