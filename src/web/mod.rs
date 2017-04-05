@@ -70,9 +70,7 @@ pub fn handler_get(safe_client: &Arc<Mutex<Client>>, req: &mut Request) -> IronR
                 };
             }
         },
-        Err(ref e) => {
-            println!("{:?}", e)
-        }
+        _ => {}
     };
 
     let ref docid = req.extensions.get::<Router>().unwrap().find("docid").unwrap_or("");
@@ -185,9 +183,7 @@ pub fn handler_store(safe_client: &Arc<Mutex<Client>>, operation: Operation, req
                 };
             }
         },
-        Err(ref e) => {
-            println!("{:?}", e)
-        }
+       _ => {}
     };
 
     let ref docid = req.extensions.get::<Router>().unwrap().find("docid").unwrap_or("");
