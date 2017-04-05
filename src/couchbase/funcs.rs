@@ -12,6 +12,7 @@ pub type ResponseCallback = unsafe extern "C" fn(instance: Instance, cbtype: Cal
 #[link(name = "couchbase")]
 extern {
     pub fn lcb_connect(instance: Instance) -> ErrorType;
+    pub fn lcb_cntl_string(instance: Instance, key: *const c_char, value: *const c_char) -> ErrorType;
     pub fn lcb_create(instance: *mut Instance, options: *const CreateSt) -> ErrorType;
     pub fn lcb_destroy(instance: Instance);
     pub fn lcb_get3(instance: Instance, cookie: *const c_void, cmd: *const cmd::Get) -> ErrorType;

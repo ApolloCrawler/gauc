@@ -4,6 +4,7 @@ extern crate iron;
 extern crate router;
 extern crate serde;
 extern crate serde_json;
+extern crate urlencoded;
 
 use hyper::header::{ContentType, Headers, ETag, EntityTag};
 use hyper::mime::{Attr, Mime, TopLevel, SubLevel, Value};
@@ -15,6 +16,7 @@ use serde_json::Map;
 
 use std::io::Read;
 use std::sync::{Arc, Mutex};
+use urlencoded::UrlEncodedQuery;
 
 use super::client::Client;
 use super::couchbase::types::error_type;
@@ -56,10 +58,27 @@ pub fn get_error(client: instance::InstancePtr, rc: &error_type::ErrorType) -> M
 }
 
 pub fn handler_get(safe_client: &Arc<Mutex<Client>>, req: &mut Request) -> IronResult<Response> {
+    let mut cas: u64 = 0;
+
+    match req.get_ref::<UrlEncodedQuery>() {
+        Ok(ref hashmap) => {
+            if hashmap.contains_key("cas") {
+                let tmp = hashmap.get("cas").unwrap().last().unwrap();
+                cas = match tmp.parse::<u64>() {
+                    Ok(val) => val,
+                    _ => 0
+                };
+            }
+        },
+        Err(ref e) => {
+            println!("{:?}", e)
+        }
+    };
+
     let ref docid = req.extensions.get::<Router>().unwrap().find("docid").unwrap_or("");
     let mut client = safe_client.lock().unwrap();
 
-    let response = client.get_sync(docid);
+    let response = client.get_sync(docid, cas);
     match response {
         Ok(result) => {
             let cas = result.cas.to_string();
@@ -145,12 +164,39 @@ pub fn handler_remove(safe_client: &Arc<Mutex<Client>>, req: &mut Request) -> Ir
 }
 
 pub fn handler_store(safe_client: &Arc<Mutex<Client>>, operation: Operation, req: &mut Request) -> IronResult<Response> {
+    let mut cas: u64 = 0;
+    let mut exptime: u32 = 0;
+
+    match req.get_ref::<UrlEncodedQuery>() {
+        Ok(ref hashmap) => {
+            if hashmap.contains_key("cas") {
+                let tmp = hashmap.get("cas").unwrap().last().unwrap();
+                cas = match tmp.parse::<u64>() {
+                    Ok(val) => val,
+                    _ => 0
+                };
+            }
+
+            if hashmap.contains_key("exptime") {
+                let tmp = hashmap.get("exptime").unwrap().last().unwrap();
+                exptime = match tmp.parse::<u32>() {
+                    Ok(val) => val,
+                    _ => 0
+                };
+            }
+        },
+        Err(ref e) => {
+            println!("{:?}", e)
+        }
+    };
+
     let ref docid = req.extensions.get::<Router>().unwrap().find("docid").unwrap_or("");
     let mut client = safe_client.lock().unwrap();
 
     let mut payload = String::new();
     let _ = req.body.read_to_string(&mut payload).unwrap();
-    let response = client.store_sync(docid, &payload[..], operation);
+    let response = client.store_sync(docid, &payload[..], operation, cas, exptime);
+
     match response {
         Ok(result) => {
             let cas = result.cas.to_string();

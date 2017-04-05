@@ -90,6 +90,12 @@ impl Client {
                 error!("lcb_connect() failed - {:?}", res);
             }
 
+            // http://docs.couchbase.com/sdk-api/couchbase-c-client-2.5.6/group__lcb-cntl.html#gab3df573dbbea79cfa8ce77f6f61563dc
+            lcb_cntl_string(instance,
+                CString::new("error_thresh_delay").unwrap().as_ptr(),
+                CString::new("5.0").unwrap().as_ptr()
+            );
+
             let res = lcb_wait(instance);
             if res != ErrorType::Success {
                 error!("lcb_wait() failed - {:?}", res);
@@ -116,37 +122,37 @@ impl Client {
     }
 
     ///  Will cause the operation to fail if the key already exists in the cluster.
-    pub fn add<'a, F>(&'a mut self, key: &str, value: &str, callback: F) -> &Client
+    pub fn add<'a, F>(&'a mut self, key: &str, value: &str, cas: u64, exptime: u32, callback: F) -> &Client
         where F: Fn(OperationResultStore) + 'static
     {
-        return self.store(key, value, Operation::Add, callback);
+        return self.store(key, value, Operation::Add, cas, exptime, callback);
     }
 
-    pub fn add_sync(&mut self, key: &str, value: &str) -> OperationResultStore
+    pub fn add_sync(&mut self, key: &str, value: &str, cas: u64, exptime: u32) -> OperationResultStore
     {
-        return self.store_sync(key, value, Operation::Add);
+        return self.store_sync(key, value, Operation::Add, cas, exptime);
     }
 
     /// Rather than setting the contents of the entire document, take the value specified in value and _append_ it to the existing bytes in the value.
-    pub fn append<'a, F>(&'a mut self, key: &str, value: &str, callback: F) -> &Client
+    pub fn append<'a, F>(&'a mut self, key: &str, value: &str, cas: u64, exptime: u32, callback: F) -> &Client
         where F: Fn(OperationResultStore) + 'static
     {
-        return self.store(key, value, Operation::Append, callback);
+        return self.store(key, value, Operation::Append, cas, exptime, callback);
     }
 
-    pub fn append_sync(&mut self, key: &str, value: &str) -> OperationResultStore
+    pub fn append_sync(&mut self, key: &str, value: &str, cas: u64, exptime: u32) -> OperationResultStore
     {
-        return self.store_sync(key, value, Operation::Append);
+        return self.store_sync(key, value, Operation::Append, cas, exptime);
     }
 
     /// Get document from database
-    pub fn get<'a, F>(&'a mut self, key: &str, callback: F) -> &Client
+    pub fn get<'a, F>(&'a mut self, key: &str, cas: u64, callback: F) -> &Client
         where F: Fn(OperationResultGet) + 'static
     {
         let key = key.to_owned();
 
         let mut gcmd = cmd::Get::default();
-
+        gcmd.cas = cas;
         gcmd.key._type = KvBufferType::Copy;
         gcmd.key.contig.bytes = key.as_ptr() as *const libc::c_void;
         gcmd.key.contig.nbytes = key.len() as u64;
@@ -184,25 +190,25 @@ impl Client {
         return self;
     }
 
-    pub fn get_sync(&mut self, key: &str) -> OperationResultGet
+    pub fn get_sync(&mut self, key: &str, cas: u64) -> OperationResultGet
     {
         let (tx, rx): (Sender<OperationResultGet>, Receiver<OperationResultGet>) = mpsc::channel();
-        self.get(key, move |result: OperationResultGet| {
+        self.get(key, cas, move |result: OperationResultGet| {
             let _ = tx.send(result);
         });
         return rx.recv().unwrap();
     }
 
     /// Like append, but prepends the new value to the existing value.
-    pub fn prepend<'a, F>(&'a mut self, key: &str, value: &str, callback: F) -> &Client
+    pub fn prepend<'a, F>(&'a mut self, key: &str, value: &str, cas: u64, exptime: u32, callback: F) -> &Client
         where F: Fn(OperationResultStore) + 'static
     {
-        return self.store(key, value, Operation::Prepend, callback);
+        return self.store(key, value, Operation::Prepend, cas, exptime, callback);
     }
 
-    pub fn prepend_sync(&mut self, key: &str, value: &str) -> OperationResultStore
+    pub fn prepend_sync(&mut self, key: &str, value: &str, cas: u64, exptime: u32) -> OperationResultStore
     {
-        return self.store_sync(key, value, Operation::Prepend);
+        return self.store_sync(key, value, Operation::Prepend, cas, exptime);
     }
 
     /// Remove document from database
@@ -260,36 +266,38 @@ impl Client {
     }
 
     /// Will cause the operation to fail _unless_ the key already exists in the cluster.
-    pub fn replace<'a, F>(&'a mut self, key: &str, value: &str, callback: F) -> &Client
+    pub fn replace<'a, F>(&'a mut self, key: &str, value: &str, cas: u64, exptime: u32, callback: F) -> &Client
         where F: Fn(OperationResultStore) + 'static
     {
-        return self.store(key, value, Operation::Replace, callback);
+        return self.store(key, value, Operation::Replace, cas, exptime, callback);
     }
 
-    pub fn replace_sync(&mut self, key: &str, value: &str) -> OperationResultStore
+    pub fn replace_sync(&mut self, key: &str, value: &str, cas: u64, exptime: u32) -> OperationResultStore
     {
-        return self.store_sync(key, value, Operation::Replace);
+        return self.store_sync(key, value, Operation::Replace, cas, exptime);
     }
 
     /// Unconditionally store the item in the cluster
-    pub fn set<'a, F>(&'a mut self, key: &str, value: &str, callback: F) -> &Client
+    pub fn set<'a, F>(&'a mut self, key: &str, value: &str, cas: u64, exptime: u32, callback: F) -> &Client
         where F: Fn(OperationResultStore) + 'static
     {
-        return self.store(key, value, Operation::Set, callback);
+        return self.store(key, value, Operation::Set, cas, exptime, callback);
     }
 
-    pub fn set_sync(&mut self, key: &str, value: &str) -> OperationResultStore
+    pub fn set_sync(&mut self, key: &str, value: &str, cas: u64, exptime: u32) -> OperationResultStore
     {
-        return self.store_sync(key, value, Operation::Set);
+        return self.store_sync(key, value, Operation::Set, cas, exptime);
     }
 
     /// Store document in database
-    pub fn store<'a, F>(&'a mut self, key: &str, value: &str, operation: Operation, callback: F) -> &Client
+    pub fn store<'a, F>(&'a mut self, key: &str, value: &str, operation: Operation, cas: u64, exptime: u32, callback: F) -> &Client
         where F: Fn(OperationResultStore) + 'static
     {
         let key = key.to_owned();
 
         let mut gcmd = cmd::Store::default();
+        gcmd.cas = cas;
+        gcmd.exptime = exptime;
         gcmd.key._type = KvBufferType::Copy;
         gcmd.key.contig.bytes = key.as_bytes().as_ptr() as *const libc::c_void;
         gcmd.key.contig.nbytes = key.len() as u64;
@@ -328,25 +336,25 @@ impl Client {
         return self;
     }
 
-    pub fn store_sync(&mut self, key: &str, value: &str, operation: Operation) -> OperationResultStore
+    pub fn store_sync(&mut self, key: &str, value: &str, operation: Operation, cas: u64, exptime: u32) -> OperationResultStore
     {
         let (tx, rx): (Sender<OperationResultStore>, Receiver<OperationResultStore>) = mpsc::channel();
-        self.store(key, value, operation, move |result: OperationResultStore| {
+        self.store(key, value, operation, cas, exptime, move |result: OperationResultStore| {
             let _ = tx.send(result);
         });
         return rx.recv().unwrap();
     }
 
     /// Behaviorally it is identical to set in that it will make the server unconditionally store the item, whether it exists or not.
-    pub fn upsert<'a, F>(&'a mut self, key: &str, value: &str, callback: F) -> &Client
+    pub fn upsert<'a, F>(&'a mut self, key: &str, value: &str, cas: u64, exptime: u32, callback: F) -> &Client
         where F: Fn(OperationResultStore) + 'static
     {
-        return self.store(key, value, Operation::Upsert, callback);
+        return self.store(key, value, Operation::Upsert, cas, exptime, callback);
     }
 
-    pub fn upsert_sync(&mut self, key: &str, value: &str) -> OperationResultStore
+    pub fn upsert_sync(&mut self, key: &str, value: &str, cas: u64, exptime: u32) -> OperationResultStore
     {
-        return self.store_sync(key, value, Operation::Upsert);
+        return self.store_sync(key, value, Operation::Upsert, cas, exptime);
     }
 
     /// Store document in database
@@ -363,7 +371,7 @@ impl Client {
                     }
                 }
             }
-            
+
             let mut gcmd = cmd::ViewQuery::default();
             gcmd.cmdflags |= 1 << 16;  // LCB_CMDVIEWQUERY_F_INCLUDE_DOCS;
             gcmd.ddoc = ddoc.as_bytes().as_ptr() as *const libc::c_void;

@@ -5,6 +5,7 @@ extern crate clap;
 extern crate ctrlc;
 extern crate gauc;
 extern crate iron;
+extern crate urlencoded;
 
 use clap::{App, Arg};
 
