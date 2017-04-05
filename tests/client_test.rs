@@ -13,8 +13,8 @@ fn it_connects() {
     assert!(client.opts.as_ref().unwrap().lock().unwrap().version() == 3);
 }
 
-#[test]
-fn it_fails_when_getting_nonexisting_document() {
+// #[test]
+// fn it_fails_when_getting_nonexisting_document() {
 //    let mut client = Client::new(DEFAULT_CONNECTION_STRING);
 //
 //    // Get data
@@ -24,7 +24,7 @@ fn it_fails_when_getting_nonexisting_document() {
 //            assert!(error.to_string() == "The key does not exist on the server");
 //        }
 //    });
-}
+// }
 
 #[test]
 fn it_stores_document() {
@@ -32,7 +32,7 @@ fn it_stores_document() {
     client.connect(DEFAULT_CONNECTION_STRING);
 
     // Store some data
-    client.store("foo", "{\"msg\": \"This is test!\"}", Operation::Upsert, |res| {
+    client.store("foo", "{\"msg\": \"This is test!\"}", Operation::Upsert, 0, 0, |res| {
         if let Ok(response) = res {
             assert!(response.rc == ErrorType::Success);
             println!("Created new document, CAS: {}", response.cas)
