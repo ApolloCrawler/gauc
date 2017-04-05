@@ -5,7 +5,8 @@ use super::super::super::client::Client;
 pub fn cmd_remove(client: &mut Client, parts: &Vec<&str>) -> bool {
     match parts.len() {
         2 => {
-            client.get(parts[1], get_callback);
+            // TODO: Add support for cas option
+            client.get(parts[1], 0, get_callback);
         },
         _ => println!("Wrong number of arguments, expect exactly one argument.")
     }

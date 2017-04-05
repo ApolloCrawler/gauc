@@ -7,7 +7,9 @@ pub fn cmd_store(client: &mut Client, parts: &Vec<&str>) -> bool {
     match parts.len() {
         1 | 2 => println!("Wrong number of arguments, expected key and value"),
         _ => {
-            client.store(parts[1], &format!("{}", parts[2..].join(" "))[..], Operation::Upsert, store_callback);
+            // TODO: Add support for cas option
+            // TODO: Add support for exptime option
+            client.store(parts[1], &format!("{}", parts[2..].join(" "))[..], Operation::Upsert, 0, 0, store_callback);
         }
     }
     return true;

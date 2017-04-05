@@ -6,7 +6,9 @@ pub fn cmd_prepend(client: &mut Client, parts: &Vec<&str>) -> bool {
     match parts.len() {
         1 | 2 => println!("Wrong number of arguments, expected key and value"),
         _ => {
-            client.prepend(parts[1], &format!("{}", parts[2..].join(" "))[..], store_callback);
+            // TODO: Add support for cas option
+            // TODO: Add support for exptime option
+            client.prepend(parts[1], &format!("{}", parts[2..].join(" "))[..], 0, 0, store_callback);
         }
     }
     return true;

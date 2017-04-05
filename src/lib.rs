@@ -8,6 +8,7 @@ extern crate libc;
 extern crate router;
 extern crate serde;
 extern crate serde_json;
+extern crate urlencoded;
 
 pub mod cli;
 pub mod client;
