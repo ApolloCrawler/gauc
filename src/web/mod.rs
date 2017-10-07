@@ -39,13 +39,13 @@ use super::couchbase::types::operation::Operation;
 // POST    /bucket/<BUCKET_NAME>/doc/<ID>/set        - set *
 // POST    /bucket/<BUCKET_NAME>/doc/<ID>/upsert     - upsert (explitcit) *
 
-pub fn get_meta(cas: &String, version: u16) -> Map<String, serde_json::Value> {
+pub fn get_meta(cas: &str, version: u16) -> Map<String, serde_json::Value> {
     let mut res: Map<String, serde_json::Value> = Map::new();
 
-    res.insert("cas".to_string(), serde_json::value::Value::String(cas.clone()));
-    res.insert("version".to_string(), serde_json::value::Value::U64(version as u64));
+    res.insert("cas".to_string(), serde_json::value::Value::String(cas.to_string()));
+    res.insert("version".to_string(), serde_json::value::Value::U64(u64::from(version)));
 
-    return res;
+    res
 }
 
 pub fn get_error(client: instance::InstancePtr, rc: &error_type::ErrorType) -> Map<String, serde_json::Value> {
@@ -54,26 +54,22 @@ pub fn get_error(client: instance::InstancePtr, rc: &error_type::ErrorType) -> M
     let mut res: Map<String, serde_json::Value> = Map::new();
     res.insert("error".to_string(), serde_json::value::Value::String(error.to_string()));
 
-    return res;
+    res
 }
 
 pub fn handler_get(safe_client: &Arc<Mutex<Client>>, req: &mut Request) -> IronResult<Response> {
     let mut cas: u64 = 0;
 
-    match req.get_ref::<UrlEncodedQuery>() {
-        Ok(ref hashmap) => {
-            if hashmap.contains_key("cas") {
-                let tmp = hashmap.get("cas").unwrap().last().unwrap();
-                cas = match tmp.parse::<u64>() {
-                    Ok(val) => val,
-                    _ => 0
-                };
+    if let Ok(hashmap) = req.get_ref::<UrlEncodedQuery>() {
+        if hashmap.contains_key("cas") {
+            let tmp = hashmap.get("cas").unwrap().last().unwrap();
+            if let Ok(val) = tmp.parse::<u64>() {
+                cas = val;
             }
-        },
-        _ => {}
+        }
     };
 
-    let ref docid = req.extensions.get::<Router>().unwrap().find("docid").unwrap_or("");
+    let docid = req.extensions.get::<Router>().unwrap().find("docid").unwrap_or("");
     let mut client = safe_client.lock().unwrap();
 
     let response = client.get_sync(docid, cas);
@@ -106,7 +102,7 @@ pub fn handler_get(safe_client: &Arc<Mutex<Client>>, req: &mut Request) -> IronR
 
             let json = serde_json::to_string(
                 &get_error(
-                    *client.instance.as_ref().unwrap().lock().unwrap(),
+                    *client.instance.as_ref().lock().unwrap(),
                     &res.0.unwrap().rc
                 )
             ).unwrap();
@@ -120,7 +116,7 @@ pub fn handler_get(safe_client: &Arc<Mutex<Client>>, req: &mut Request) -> IronR
 
 pub fn handler_remove(safe_client: &Arc<Mutex<Client>>, req: &mut Request) -> IronResult<Response> {
     debug!("handler_remove() called");
-    let ref docid = req.extensions.get::<Router>().unwrap().find("docid").unwrap_or("");
+    let docid = req.extensions.get::<Router>().unwrap().find("docid").unwrap_or("");
     let mut client = safe_client.lock().unwrap();
 
     let mut payload = String::new();
@@ -149,7 +145,7 @@ pub fn handler_remove(safe_client: &Arc<Mutex<Client>>, req: &mut Request) -> Ir
 
             let json = serde_json::to_string(
                 &get_error(
-                    *client.instance.as_ref().unwrap().lock().unwrap(),
+                    *client.instance.as_ref().lock().unwrap(),
                     &res.0.unwrap().rc
                 )
             ).unwrap();
@@ -165,28 +161,25 @@ pub fn handler_store(safe_client: &Arc<Mutex<Client>>, operation: Operation, req
     let mut cas: u64 = 0;
     let mut exptime: u32 = 0;
 
-    match req.get_ref::<UrlEncodedQuery>() {
-        Ok(ref hashmap) => {
-            if hashmap.contains_key("cas") {
-                let tmp = hashmap.get("cas").unwrap().last().unwrap();
-                cas = match tmp.parse::<u64>() {
-                    Ok(val) => val,
-                    _ => 0
-                };
-            }
+    if let Ok(hashmap) = req.get_ref::<UrlEncodedQuery>() {
+        if hashmap.contains_key("cas") {
+            let tmp = hashmap.get("cas").unwrap().last().unwrap();
+            cas = match tmp.parse::<u64>() {
+                Ok(val) => val,
+                _ => 0
+            };
+        }
 
-            if hashmap.contains_key("exptime") {
-                let tmp = hashmap.get("exptime").unwrap().last().unwrap();
-                exptime = match tmp.parse::<u32>() {
-                    Ok(val) => val,
-                    _ => 0
-                };
-            }
-        },
-       _ => {}
+        if hashmap.contains_key("exptime") {
+            let tmp = hashmap.get("exptime").unwrap().last().unwrap();
+            exptime = match tmp.parse::<u32>() {
+                Ok(val) => val,
+                _ => 0
+            };
+        }
     };
 
-    let ref docid = req.extensions.get::<Router>().unwrap().find("docid").unwrap_or("");
+    let docid = req.extensions.get::<Router>().unwrap().find("docid").unwrap_or("");
     let mut client = safe_client.lock().unwrap();
 
     let mut payload = String::new();
@@ -216,7 +209,7 @@ pub fn handler_store(safe_client: &Arc<Mutex<Client>>, operation: Operation, req
 
             let json = serde_json::to_string(
                 &get_error(
-                    *client.instance.as_ref().unwrap().lock().unwrap(),
+                    *client.instance.as_ref().lock().unwrap(),
                     &res.0.unwrap().rc
                 )
             ).unwrap();
@@ -229,8 +222,8 @@ pub fn handler_store(safe_client: &Arc<Mutex<Client>>, operation: Operation, req
 }
 
 pub fn handler_view_query(safe_client: &Arc<Mutex<Client>>, req: &mut Request) -> IronResult<Response> {
-    let ref ddoc = req.extensions.get::<Router>().unwrap().find("ddoc").unwrap_or("");
-    let ref view = req.extensions.get::<Router>().unwrap().find("view").unwrap_or("");
+    let ddoc = req.extensions.get::<Router>().unwrap().find("ddoc").unwrap_or("");
+    let view = req.extensions.get::<Router>().unwrap().find("view").unwrap_or("");
     let mut client = safe_client.lock().unwrap();
 
     let response = client.view_query_sync(ddoc, view);
@@ -241,7 +234,7 @@ pub fn handler_view_query(safe_client: &Arc<Mutex<Client>>, req: &mut Request) -
 
             let json = serde_json::to_string(
                 &get_error(
-                    *client.instance.as_ref().unwrap().lock().unwrap(),
+                    *client.instance.as_ref().lock().unwrap(),
                     &res.0.unwrap().rc
                 )
             ).unwrap();
@@ -277,7 +270,7 @@ pub fn handler_view_query(safe_client: &Arc<Mutex<Client>>, req: &mut Request) -
 #[allow(unused_mut)]
 #[allow(unused_must_use)]
 #[allow(unused_variables)]
-pub fn start_web<'a>(c: &'a Arc<Mutex<Client>>, port: u16) {
+pub fn start_web(c: &Arc<Mutex<Client>>, port: u16) {
     println!("Starting REST Interface on port {}.", port);
 
     let mut router = Router::new();
@@ -366,3 +359,4 @@ pub fn start_web<'a>(c: &'a Arc<Mutex<Client>>, port: u16) {
         }
     }
 }
+

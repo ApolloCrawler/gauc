@@ -26,17 +26,17 @@ impl StoreInternal {
                 ErrorType::Success => {
                     let bytes = ::std::slice::from_raw_parts(self.key as *mut u8, self.nkey as usize);
                     let text = ::std::str::from_utf8(bytes).unwrap();
-                    return Some(text.to_owned());
+                    Some(text.to_owned())
                 },
                 _ => {
-                    return None;
+                    None
                 }
             }
         }
     }
 
     pub fn error(&self, instance: Instance) -> &'static str {
-        return format_error(instance, &self.rc);
+        format_error(instance, &self.rc)
     }
 }
 

@@ -22,5 +22,5 @@ pub enum CallbackType {
     Sdlookup = 18,
     Sdmutate = 19,
     Max = 20,
-    ViewQuery = 4294967295,
+    ViewQuery = 4_294_967_295,
 }

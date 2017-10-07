@@ -21,7 +21,7 @@ use super::super::funcs::lcb_strerror;
 
 pub fn format_error(instance: Instance, error: &ErrorType) -> &'static str {
     unsafe {
-        return CStr::from_ptr(lcb_strerror(instance, *error)).to_str().unwrap()
+        CStr::from_ptr(lcb_strerror(instance, *error)).to_str().unwrap()
     }
 }
 

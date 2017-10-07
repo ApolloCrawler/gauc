@@ -31,8 +31,8 @@ before_script:
 
 before_install:
   - ./.travis/install.sh
-  - wget http://packages.couchbase.com/releases/4.1.0/couchbase-server-community_4.1.0-ubuntu12.04_amd64.deb
-  - sudo dpkg -i couchbase-server-community_4.1.0-ubuntu12.04_amd64.deb
+  - wget http://packages.couchbase.com/releases/4.5.1/couchbase-server-community_4.5.1-ubuntu12.04_amd64.deb
+  - sudo dpkg -i couchbase-server-community_4.5.1-ubuntu12.04_amd64.deb
   - sleep 30
   - "curl -u Administrator:Administrator -v -X POST http://localhost:8091/node/controller/setupServices -d 'services=kv%2Cn1ql%2Cindex'"
   - "curl -v -X POST http://localhost:8091/nodes/self/controller/settings -d 'path=%2Fopt%2Fcouchbase%2Fvar%2Flib%2Fcouchbase%2Fdata&index_path=%2Fopt%2Fcouchbase%2Fvar%2Flib%2Fcouchbase%2Fdata'"
@@ -42,6 +42,7 @@ before_install:
   - cargo install cargo-count --force
   - cargo install cargo-graph --force
   - cargo install cargo-outdated --force
+  - cargo install clippy --force
 
 after_script:
   - make
@@ -49,4 +50,3 @@ after_script:
 notifications:
   email:
     - korczis@gmail.com
-    - lv.bossek@gmail.com
