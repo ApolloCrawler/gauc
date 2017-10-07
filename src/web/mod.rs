@@ -102,7 +102,7 @@ pub fn handler_get(safe_client: &Arc<Mutex<Client>>, req: &mut Request) -> IronR
 
             let json = serde_json::to_string(
                 &get_error(
-                    *client.instance.as_ref().lock().unwrap(),
+                    client.instance,
                     &res.0.unwrap().rc
                 )
             ).unwrap();
@@ -145,7 +145,7 @@ pub fn handler_remove(safe_client: &Arc<Mutex<Client>>, req: &mut Request) -> Ir
 
             let json = serde_json::to_string(
                 &get_error(
-                    *client.instance.as_ref().lock().unwrap(),
+                    client.instance,
                     &res.0.unwrap().rc
                 )
             ).unwrap();
@@ -209,7 +209,7 @@ pub fn handler_store(safe_client: &Arc<Mutex<Client>>, operation: Operation, req
 
             let json = serde_json::to_string(
                 &get_error(
-                    *client.instance.as_ref().lock().unwrap(),
+                    client.instance,
                     &res.0.unwrap().rc
                 )
             ).unwrap();
@@ -234,7 +234,7 @@ pub fn handler_view_query(safe_client: &Arc<Mutex<Client>>, req: &mut Request) -
 
             let json = serde_json::to_string(
                 &get_error(
-                    *client.instance.as_ref().lock().unwrap(),
+                    client.instance,
                     &res.0.unwrap().rc
                 )
             ).unwrap();

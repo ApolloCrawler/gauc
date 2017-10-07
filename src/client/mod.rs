@@ -1,5 +1,7 @@
 extern crate libc;
 
+// use super::couchbase::types::response::format_error;
+
 use libc::{c_void};
 use std::ffi::CStr;
 use std::ffi::CString;
@@ -7,7 +9,6 @@ use std::mem::{forget};
 use std::sync::mpsc;
 use std::sync::mpsc::{Sender, Receiver};
 
-use std::sync::{Arc, Mutex};
 use std::result;
 
 use super::couchbase::*;
@@ -39,8 +40,8 @@ pub type OperationResultViewQueryInternalRowCallback = Box<Box<Fn(&Instance, &u6
 
 #[derive(Debug)]
 pub struct Client {
-    pub opts: Arc<Mutex<CreateSt>>,
-    pub instance: Arc<Mutex<Instance>>,
+    pub opts: CreateSt,
+    pub instance: Instance,
     pub uri: String
 }
 
@@ -101,8 +102,8 @@ impl Client {
             lcb_install_callback3(instance, CallbackType::Store, op_callback);
 
             Ok(Client {
-                opts: Arc::new(Mutex::new(opts)),
-                instance: Arc::new(Mutex::new(instance)),
+                opts,
+                instance,
                 uri: uri.to_string()
             })
         }
@@ -145,8 +146,6 @@ impl Client {
         gcmd.key.contig.nbytes = key.len() as u64;
 
         unsafe {
-            let instance = self.instance.as_ref().lock().unwrap();
-
             let boxed: OperationResultGetInternalCallback = Box::new(Box::new(move |result: &response::GetInternal| {
                 match result.rc {
                     ErrorType::Success => {
@@ -154,21 +153,20 @@ impl Client {
                         callback(Ok(response::Get::new(result)));
                     },
                     _ => {
-                        callback(Err((Some(response::Get::new(result)), "error" /* result.error(*instance) */)));
+                        callback(Err((Some(response::Get::new(result)), "error" /* result.error(self.instance) */)));
                     }
                 }
             }));
 
             let user_data = Box::into_raw(boxed) as *mut Box<Fn(&response::GetInternal)> as *mut c_void;
 
-            let res = lcb_get3(*instance, user_data, &gcmd as *const cmd::Get);
+            let res = lcb_get3(self.instance, user_data, &gcmd as *const cmd::Get);
             if res != ErrorType::Success {
-                // callback(Err((None, format_error(*instance, &res))));
-            } else {
-                let res = lcb_wait(*instance);
-                if res != ErrorType::Success {
-                    // callback(Err((None, format_error(*instance, &res))))
-                }
+                error!("lcb_get3() failed");
+                // callback(Err((None, format_error(self.instance, &res))));
+            } else if lcb_wait(self.instance) != ErrorType::Success {
+                error!("lcb_wait() failed");
+                // callback(Err((None, format_error(self.instance, &res))))
             }
         }
 
@@ -212,8 +210,6 @@ impl Client {
         gcmd.key.contig.nbytes = key.len() as u64;
 
         unsafe {
-            let instance = self.instance.as_ref().lock().unwrap();
-
             let boxed: OperationResultRemoveInternalCallback = Box::new(Box::new(move |result: &response::RemoveInternal| {
                 match result.rc {
                     ErrorType::Success => {
@@ -221,21 +217,20 @@ impl Client {
                         callback(Ok(response::Remove::new(result)));
                     },
                     _ => {
-                        callback(Err((Some(response::Remove::new(result)), "error" /* result.error(*instance) */)));
+                        callback(Err((Some(response::Remove::new(result)), "error" /* result.error(self.instance) */)));
                     }
                 }
             }));
 
             let user_data = Box::into_raw(boxed) as *mut Box<Fn(&response::RemoveInternal)> as *mut c_void;
 
-            let res = lcb_remove3(*instance, user_data, &gcmd as *const cmd::Remove);
+            let res = lcb_remove3(self.instance, user_data, &gcmd as *const cmd::Remove);
             if res != ErrorType::Success {
-                //  callback(Err((None, format_error(*instance, &res))));
-            } else {
-                let res = lcb_wait(*instance);
-                if res != ErrorType::Success {
-                    // callback(Err((None, format_error(*instance, &res))))
-                }
+                error!("lcb_remove3() failed");
+                //  callback(Err((None, format_error(self.instance, &res))));
+            } else if lcb_wait(self.instance) != ErrorType::Success {
+                error!("lcb_wait() failed");
+                // callback(Err((None, format_error(self.instance, &res))))
             }
         }
 
@@ -310,15 +305,13 @@ impl Client {
 
             let user_data = Box::into_raw(boxed) as *mut Box<Fn(&response::StoreInternal)> as *mut c_void;
 
-            let instance = self.instance.as_ref().lock().unwrap();
-            let res = lcb_store3(*instance, user_data, &gcmd as *const cmd::Store);
+            let res = lcb_store3(self.instance, user_data, &gcmd as *const cmd::Store);
             if res != ErrorType::Success {
+                error!("lcb_store3() failed");
                 // callback(Err((None, format_error(instance, &res))))
-            } else {
-                let res = lcb_wait(*instance);
-                if res != ErrorType::Success {
-                    // callback(Err((None, format_error(instance, &res))))
-                }
+            } else if lcb_wait(self.instance) != ErrorType::Success {
+                error!("lcb_wait() failed");
+                // callback(Err((None, format_error(instance, &res))))
             }
         }
 
@@ -384,15 +377,13 @@ impl Client {
 
             let user_data = Box::into_raw(boxed) as *mut Box<Fn(&response::ViewQueryInternal)> as *mut c_void;
 
-            let instance = self.instance.as_ref().lock().unwrap();
-            let res = lcb_view_query(*instance, user_data, &gcmd as *const cmd::ViewQuery);
+            let res = lcb_view_query(self.instance, user_data, &gcmd as *const cmd::ViewQuery);
             if res != ErrorType::Success {
-                // callback(Err((None, format_error(instance, &res))))
-            } else {
-                let res = lcb_wait(*instance);
-                if res != ErrorType::Success {
-                    // callback(Err((None, format_error(instance, &res))))
-                }
+                error!("lcb_view_query() failed");
+                // callback(Err((None, format_error(self.instance, &res))))
+            } else if lcb_wait(self.instance) != ErrorType::Success {
+                error!("lcb_wait() failed")
+                // callback(Err((None, format_error(self.instance, &res))))
             }
         }
 
@@ -414,8 +405,7 @@ impl Drop for Client {
     fn drop(&mut self) {
         unsafe {
             info!("Disconnecting from {}", &self.uri);
-            let instance = self.instance.as_ref().lock().unwrap();
-            lcb_destroy(*instance);
+            lcb_destroy(self.instance);
         }
     }
 }
