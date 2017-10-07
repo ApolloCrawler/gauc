@@ -44,6 +44,11 @@ before_install:
   - cargo install cargo-outdated --force
   - cargo install clippy --force
 
+script:
+  - cargo build --verbose --all
+  - cargo test --verbose --all
+  - cargo clippy --verbose --all
+
 after_script:
   - make
 
