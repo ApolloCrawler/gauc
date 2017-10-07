@@ -1,7 +1,5 @@
 extern crate libc;
 
-// use super::couchbase::types::response::format_error;
-
 use libc::{c_void};
 use std::ffi::CStr;
 use std::ffi::CString;
@@ -14,27 +12,27 @@ use std::result;
 use super::couchbase::*;
 
 // Gets
-pub type OperationResultGet = Result<response::Get, (Option<response::Get>, &'static str)>;
+pub type OperationResultGet = Result<response::Get, (Option<response::Get>, types::error_type::ErrorType)>;
 pub type OperationResultGetCallback = Box<Box<Fn(&response::Get)>>;
-pub type OperationResultGetInternal<'a> = Result<&'a response::GetInternal, (Option<&'a response::GetInternal>, &'static str)>;
+pub type OperationResultGetInternal<'a> = Result<&'a response::GetInternal, (Option<&'a response::GetInternal>, types::error_type::ErrorType)>;
 pub type OperationResultGetInternalCallback = Box<Box<Fn(&response::GetInternal)>>;
 
 // Remove
-pub type OperationResultRemove = Result<response::Remove, (Option<response::Remove>, &'static str)>;
+pub type OperationResultRemove = Result<response::Remove, (Option<response::Remove>, types::error_type::ErrorType)>;
 pub type OperationResultRemoveCallback = Box<Box<Fn(&response::Remove)>>;
-pub type OperationResultRemoveInternal<'a> = Result<&'a response::RemoveInternal, (Option<&'a response::RemoveInternal>, &'static str)>;
+pub type OperationResultRemoveInternal<'a> = Result<&'a response::RemoveInternal, (Option<&'a response::RemoveInternal>, types::error_type::ErrorType)>;
 pub type OperationResultRemoveInternalCallback = Box<Box<Fn(&response::RemoveInternal)>>;
 
 // Store
-pub type OperationResultStore = Result<response::Store, (Option<response::Store>, &'static str)>;
+pub type OperationResultStore = Result<response::Store, (Option<response::Store>, types::error_type::ErrorType)>;
 pub type OperationResultStoreCallback = Box<Box<Fn(&response::Store)>>;
-pub type OperationResultStoreInternal<'a> = Result<&'a response::StoreInternal, (Option<&'a response::StoreInternal>, &'static str)>;
+pub type OperationResultStoreInternal<'a> = Result<&'a response::StoreInternal, (Option<&'a response::StoreInternal>, types::error_type::ErrorType)>;
 pub type OperationResultStoreInternalCallback = Box<Box<Fn(&response::StoreInternal)>>;
 
 // ViewQuery
-pub type OperationResultViewQuery = Result<response::ViewQuery, (Option<response::ViewQuery>, &'static str)>;
+pub type OperationResultViewQuery = Result<response::ViewQuery, (Option<response::ViewQuery>, types::error_type::ErrorType)>;
 pub type OperationResultViewQueryCallback = Box<Box<Fn(&response::ViewQuery)>>;
-pub type OperationResultViewQueryInternal<'a> = Result<&'a response::ViewQueryInternal, (Option<&'a response::ViewQueryInternal>, &'static str)>;
+pub type OperationResultViewQueryInternal<'a> = Result<&'a response::ViewQueryInternal, (Option<&'a response::ViewQueryInternal>, types::error_type::ErrorType)>;
 pub type OperationResultViewQueryInternalCallback = Box<Box<Fn(&response::ViewQueryInternal)>>;
 pub type OperationResultViewQueryInternalRowCallback = Box<Box<Fn(&Instance, &u64, *mut c_void)>>;
 
@@ -152,8 +150,9 @@ impl Client {
                         debug!("{:?}", result);
                         callback(Ok(response::Get::new(result)));
                     },
-                    _ => {
-                        callback(Err((Some(response::Get::new(result)), "error" /* result.error(self.instance) */)));
+                    e => {
+                        // let _ = format_error(self.instance, &e);
+                        callback(Err((Some(response::Get::new(result)), e)));
                     }
                 }
             }));
@@ -216,8 +215,8 @@ impl Client {
                         debug!("{:?}", result);
                         callback(Ok(response::Remove::new(result)));
                     },
-                    _ => {
-                        callback(Err((Some(response::Remove::new(result)), "error" /* result.error(self.instance) */)));
+                    e => {
+                        callback(Err((Some(response::Remove::new(result)), e)));
                     }
                 }
             }));
@@ -297,8 +296,8 @@ impl Client {
                         debug!("{:?}", result);
                         callback(Ok(response::Store::new(result)));
                     },
-                    _ => {
-                        callback(Err((Some(response::Store::new(result)), "error" /* result.error(self.instance) */)));
+                    e => {
+                        callback(Err((Some(response::Store::new(result)), e)));
                     }
                 }
             }));
@@ -369,8 +368,8 @@ impl Client {
                         debug!("{:?}", result);
                         callback(Ok(response::ViewQuery::new(result)));
                     },
-                    _ => {
-                        callback(Err((Some(response::ViewQuery::new(result)), "error")));
+                    e => {
+                        callback(Err((Some(response::ViewQuery::new(result)), e)));
                     }
                 }
             }));
