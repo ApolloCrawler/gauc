@@ -3,7 +3,6 @@ extern crate libc;
 use libc::{c_void};
 use std::ffi::CStr;
 use std::ffi::CString;
-use std::{process};
 use std::mem::{forget};
 use std::sync::mpsc;
 use std::sync::mpsc::{Sender, Receiver};
@@ -74,14 +73,16 @@ impl Client {
         unsafe {
             let res = lcb_create(&mut instance as *mut Instance, &opts as *const CreateSt);
             if res != ErrorType::Success {
-                error!("lcb_connect() failed - {:?}", res);
+                let str = CStr::from_ptr(lcb_strerror(instance, res)).to_str().unwrap().to_string();
+                return Err(format!("lcb_create() - {}", &str));
             }
 
             info!("Connecting to {}", uri);
 
             let res = lcb_connect(instance);
             if res != ErrorType::Success {
-                error!("lcb_connect() failed - {:?}", res);
+                let str = CStr::from_ptr(lcb_strerror(instance, res)).to_str().unwrap().to_string();
+                return Err(format!("lcb_connect() - {}", &str));
             }
 
             // http://docs.couchbase.com/sdk-api/couchbase-c-client-2.5.6/group__lcb-cntl.html#gab3df573dbbea79cfa8ce77f6f61563dc
@@ -92,16 +93,14 @@ impl Client {
 
             let res = lcb_wait(instance);
             if res != ErrorType::Success {
-                error!("lcb_wait() failed - {:?}", res);
+                let str = CStr::from_ptr(lcb_strerror(instance, res)).to_str().unwrap().to_string();
+                return Err(format!("lcb_wait() - {}", &str));
             }
 
             let res = lcb_get_bootstrap_status(instance);
             if res != ErrorType::Success {
-                error!("lcb_get_bootstrap_status() failed - {:?}, \"{}\"",
-                         res,
-                         CStr::from_ptr(lcb_strerror(instance, res)).to_str().unwrap()
-                );
-                process::exit(-1);
+                let str = CStr::from_ptr(lcb_strerror(instance, res)).to_str().unwrap().to_string();
+                return Err(format!("lcb_get_bootstrap_status() - {}", &str));
             }
 
             lcb_install_callback3(instance, CallbackType::Get, op_callback);

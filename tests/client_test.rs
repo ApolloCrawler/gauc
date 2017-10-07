@@ -1,8 +1,8 @@
 extern crate gauc;
 
 use gauc::client::*;
-use gauc::couchbase::types::error_type::ErrorType;
-use gauc::couchbase::types::operation::Operation;
+// use gauc::couchbase::types::error_type::ErrorType;
+// use gauc::couchbase::types::operation::Operation;
 
 const DEFAULT_CONNECTION_STRING: &'static str = "couchbase://localhost/default";
 
