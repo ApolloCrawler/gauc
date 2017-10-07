@@ -9,6 +9,7 @@ use std::sync::mpsc;
 use std::sync::mpsc::{Sender, Receiver};
 
 use std::sync::{Arc, Mutex};
+use std::result;
 
 use super::super::couchbase::*;
 
@@ -46,15 +47,8 @@ pub struct Client {
 
 impl Clone for Client {
     fn clone(&self) -> Client {
-        let mut client = Client {
-            opts: None,
-            instance: None,
-            uri: None
-        };
-
         let uri = &self.uri.as_ref().unwrap().clone()[..];
-        client.connect(uri);
-        return client;
+        Client::connect(uri).unwrap()
     }
 }
 
@@ -69,7 +63,7 @@ impl Client {
         }
     }
 
-    pub fn connect(&mut self, uri: &str) {
+    pub fn connect(uri: &str) -> result::Result<Client, String> {
         let connstr = CString::new(uri).unwrap();
 
         let mut opts = CreateSt::default();
@@ -114,10 +108,11 @@ impl Client {
             lcb_install_callback3(instance, CallbackType::Remove, op_callback);
             lcb_install_callback3(instance, CallbackType::Store, op_callback);
 
-            self.opts = Some(Arc::new(Mutex::new(opts)));
-            self.instance = Some(Arc::new(Mutex::new(instance)));
-            self.uri = Some(uri.to_string());
-
+            Ok(Client {
+                opts: Some(Arc::new(Mutex::new(opts))),
+                instance: Some(Arc::new(Mutex::new(instance))),
+                uri: Some(uri.to_string())
+            })
         }
     }
 
