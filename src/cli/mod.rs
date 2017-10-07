@@ -31,13 +31,11 @@ pub fn main(_args: &clap::ArgMatches, mut client: &mut Client) {
         print!("gauc> ");
         let _ = io::stdout().flush();
         let mut input = String::new();
-        match io::stdin().read_line(&mut input) {
-            Ok(_) => {
-                return process_command(&input.trim());
-            }
-            _ => {
-                return false;
-            }
+
+        if io::stdin().read_line(&mut input).is_ok() {
+            process_command(input.trim())
+        } else {
+            false
         }
     };
 

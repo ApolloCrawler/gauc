@@ -57,7 +57,7 @@ unsafe extern "C" fn op_callback(_instance: Instance, cbtype: CallbackType, resp
             let gresp = resp as *const response::GetInternal;
             println!(">> CAS: {}", (*gresp).cas);
 
-            if (*gresp).value.is_null() == false {
+            if !(*gresp).value.is_null() {
                 let res = CString::from_raw((*gresp).value as *mut i8);
                 let length = (*gresp).nvalue as usize;
 

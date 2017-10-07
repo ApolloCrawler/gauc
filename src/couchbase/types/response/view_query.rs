@@ -1,5 +1,5 @@
 use libc::{c_ulong, c_ulonglong, c_void};
-use std::{fmt, ptr};
+use std::{fmt};
 
 use super::get;
 use super::super::error_type::ErrorType;
@@ -66,10 +66,10 @@ impl ViewQueryInternal {
                     let bytes = ::std::slice::from_raw_parts(self.key as *mut u8, self.nkey as usize);
                     let text = ::std::str::from_utf8(bytes).unwrap();
 
-                    return Some(text.to_string());
+                    Some(text.to_string())
                 },
                 _ => {
-                    return None;
+                    None
                 }
             }
         }
@@ -81,10 +81,10 @@ impl ViewQueryInternal {
                 ErrorType::Success => {
                     let bytes = ::std::slice::from_raw_parts(self.docid as *mut u8, self.ndocid as usize);
                     let text = ::std::str::from_utf8(bytes).unwrap();
-                    return Some(text.to_string());
+                    Some(text.to_string())
                 },
                 _ => {
-                    return None;
+                    None
                 }
             }
         }
@@ -96,10 +96,10 @@ impl ViewQueryInternal {
                 ErrorType::Success => {
                     let bytes = ::std::slice::from_raw_parts(self.value as *mut u8, self.nvalue as usize);
                     let text = ::std::str::from_utf8(bytes).unwrap();
-                    return Some(text.to_string());
+                    Some(text.to_string())
                 },
                 _ => {
-                    return None;
+                    None
                 }
             }
         }
@@ -111,10 +111,10 @@ impl ViewQueryInternal {
                 ErrorType::Success => {
                     let bytes = ::std::slice::from_raw_parts(self.geometry as *mut u8, self.ngeometry as usize);
                     let text = ::std::str::from_utf8(bytes).unwrap();
-                    return Some(text.to_string());
+                    Some(text.to_string())
                 },
                 _ => {
-                    return None;
+                    None
                 }
             }
         }
@@ -122,19 +122,16 @@ impl ViewQueryInternal {
 
     pub fn docresp(&self) -> Option<get::GetInternal> {
         unsafe {
-            match self.docresp != ptr::null() {
-                true => {
-                    return Some(*self.docresp);
-                },
-                _ => {
-                    return None;
-                }
+            if self.docresp.is_null() {
+                None
+            } else {
+                Some(*self.docresp)
             }
         }
     }
 
     pub fn error(&self, instance: Instance) -> &'static str {
-        return format_error(instance, &self.rc);
+        format_error(instance, &self.rc)
     }
 }
 
